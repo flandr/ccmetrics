@@ -9,11 +9,12 @@ include_directories(
 
 add_executable(test
     driver.cc
+    thread_local_random_test.cc
     thread_local_test.cc
 )
 
 target_link_libraries(test
-    #ccmetrics
+    ccmetrics
     gtest
     pthread
 )

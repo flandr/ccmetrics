@@ -14,7 +14,7 @@ set(ccmetrics_SHARED_LIBRARY
 
 # giant mega nightmare :(
 set(libccmetrics_SRCS
-    #thread_local_random.cc
+    thread_local_random.cc
 )
 
 # Set the include directories
@@ -23,7 +23,7 @@ include_directories(
 )
 
 # Main library targets
-#add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
+add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
 
 # Apple frameworks
 #IF(APPLE)
@@ -38,9 +38,9 @@ include_directories(
 #ENDIF (APPLE)
 
 # Link dependencies
-#target_link_libraries(${ccmetrics_SHARED_LIBRARY}
-#${EXTRA_LIBS}
-#)
+target_link_libraries(${ccmetrics_SHARED_LIBRARY}
+${EXTRA_LIBS}
+)
 
 # Installation
 #install(TARGETS
