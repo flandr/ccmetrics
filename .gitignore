@@ -1,0 +1,10 @@
+# Ignore build directory
+build
+
+# Ignore ctags and cscope
+cscope.out
+tags
+TAGS
+
+# Python
+*.pyc
