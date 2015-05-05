@@ -9,6 +9,7 @@ include_directories(
 
 add_executable(test
     driver.cc
+    hazard_pointer_test.cc
     thread_local_random_test.cc
     thread_local_test.cc
 )
