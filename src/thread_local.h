@@ -63,8 +63,8 @@ public:
         return *get();
     }
 
-    void reset(T* ptr) {
-        SharedStorage::set(id_, ptr);
+    void reset(T* ptr, void(*deleter)(void*) = nullptr) {
+        SharedStorage::set(id_, ptr, deleter);
     }
 
     T* get() const {
@@ -87,8 +87,11 @@ struct DefaultNew {
 template<typename T, typename NewFunctor = DefaultNew<T>>
 class ThreadLocal {
 public:
-    ThreadLocal() : new_functor_(NewFunctor()) { }
-    explicit ThreadLocal(NewFunctor && nf) : new_functor_(nf) { }
+    ThreadLocal() : new_functor_(NewFunctor()), deleter_(nullptr) { }
+    explicit ThreadLocal(NewFunctor && nf)
+        : new_functor_(nf), deleter_(nullptr) { }
+    ThreadLocal(NewFunctor && nf, void(*deleter)(void*))
+        : new_functor_(nf), deleter_(deleter) { }
 
     T* operator->() const {
        return get();
@@ -111,12 +114,15 @@ private:
 
         // Allocate on first use
         ret = new_functor_();
-        ptr_.reset(ret);
+        ptr_.reset(ret, deleter_);
         return ret;
     }
 
     // Allow stateful type construction
     NewFunctor new_functor_;
+
+    // Allow custom deletion
+    void (*deleter_)(void*);
 
     // Mutable for on-use allocation
     mutable ThreadLocalPointer<T> ptr_;

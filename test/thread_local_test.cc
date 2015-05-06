@@ -120,5 +120,21 @@ TEST(ThreadLocalTest, BasicFunctionality) {
     ASSERT_EQ(2, *tl);
 }
 
+static int custom_deletions = 0;
+
+template<typename T>
+static void custom_deleter(void *d) {
+    ++custom_deletions;
+    delete reinterpret_cast<T*>(d);
+}
+
+TEST(ThreadLocalTest, CustomDeleter) {
+    {
+        ThreadLocal<int> t1(DefaultNew<int>(), custom_deleter<int>);
+        *t1 = 1;
+    }
+    ASSERT_EQ(1, custom_deletions);
+}
+
 } // test namespace
 } // ccmetrics namespace

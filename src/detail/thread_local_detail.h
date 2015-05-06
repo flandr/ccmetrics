@@ -58,13 +58,13 @@ public:
     };
 
     template<typename T>
-    void set(uint32_t idx, T *ptr) {
+    void set(uint32_t idx, T *ptr, void(*deleter)(void *)) {
         // XXX assert idx >= 1
         if (idx > elements_.size()) {
             elements_.resize(idx);
         }
         // XXX assert elements_[idx].ptr == nullptr
-        Element e = {ptr, deletePtr<T>};
+        Element e = {ptr, deleter ? deleter : deletePtr<T>};
         elements_[idx - 1] = e;
     }
 
@@ -197,7 +197,7 @@ public:
 
     /** Set the value stored by an id, replacing if it exists. */
     template<typename T>
-    static void set(uint32_t id, T* ptr) {
+    static void set(uint32_t id, T* ptr, void(*deleter)(void *)) {
         auto& ss = singleton();
         auto* tls = singleton().tls_handle_.get();
 
@@ -207,7 +207,7 @@ public:
             ss.addThread(tls);
         }
 
-        tls->set(id, ptr);
+        tls->set(id, ptr, deleter);
     }
 
     static void destroy(uint32_t id) {
