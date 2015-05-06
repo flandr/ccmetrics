@@ -47,6 +47,6 @@ static uint32_t mkInitialSeed() {
 }
 
 std::atomic<uint32_t> ThreadLocalRandom::seeder_(mkInitialSeed());
-ThreadLocal<ThreadLocalRandom> ThreadLocalRandom::local_random_;
+ThreadLocal<ThreadLocalRandom, ThreadLocalRandom::NewFunctor> ThreadLocalRandom::local_random_;
 
 } // ccmetrics namespace

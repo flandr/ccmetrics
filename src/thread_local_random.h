@@ -57,7 +57,13 @@ private:
     // Evolving seed state for generating unique per-thread streams
     static std::atomic<uint32_t> seeder_;
 
-    static ThreadLocal<ThreadLocalRandom> local_random_;
+    struct NewFunctor {
+        ThreadLocalRandom* operator()(void) const {
+            return new ThreadLocalRandom();
+        }
+    };
+
+    static ThreadLocal<ThreadLocalRandom, NewFunctor> local_random_;
 
     struct State {
         std::minstd_rand generator;
@@ -65,10 +71,6 @@ private:
     };
 
     State state_;
-
-    // Ugh.
-    template<typename T>
-    friend T* ThreadLocal<T>::get() const;
 };
 
 template<typename Iter>

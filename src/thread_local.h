@@ -78,9 +78,17 @@ private:
 };
 
 template<typename T>
+struct DefaultNew {
+    T* operator()(void) const {
+        return new T();
+    }
+};
+
+template<typename T, typename NewFunctor = DefaultNew<T>>
 class ThreadLocal {
 public:
-    ThreadLocal() { }
+    ThreadLocal() : new_functor_(NewFunctor()) { }
+    explicit ThreadLocal(NewFunctor && nf) : new_functor_(nf) { }
 
     T* operator->() const {
        return get();
@@ -102,10 +110,13 @@ private:
         }
 
         // Allocate on first use
-        ret = new T();
+        ret = new_functor_();
         ptr_.reset(ret);
         return ret;
     }
+
+    // Allow stateful type construction
+    NewFunctor new_functor_;
 
     // Mutable for on-use allocation
     mutable ThreadLocalPointer<T> ptr_;
