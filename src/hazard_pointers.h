@@ -65,6 +65,8 @@ template<typename T, int K> class HazardPointer;
 template<typename T, int K = 1>
 class HazardPointers {
 public:
+    typedef HazardPointer<T, K> pointer_type;
+
     HazardPointers() : head_(nullptr), hp_count_(0) { }
     ~HazardPointers();
 
