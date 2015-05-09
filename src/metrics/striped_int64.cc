@@ -98,7 +98,7 @@ void Striped64::add(int64_t value) {
     }
 
     bool contended = false;
-    size_t hash_code = *thread_hash_code_;
+    size_t& hash_code = *thread_hash_code_;
     for (;;) {
         if (!cur) {
             cur = new Striped64_Storage();
@@ -154,9 +154,6 @@ void Striped64::add(int64_t value) {
         hash_code ^= hash_code >> 17;
         hash_code ^= hash_code << 5;
     }
-
-    // [possibly] update thread hash code
-    *thread_hash_code_ = hash_code;
 
     // Clear the hazard
     stripes_hazard_->clearHazard(0);
