@@ -112,10 +112,8 @@ void Striped64::add(int64_t value) {
             }
         }
 
-        do {
-            cur = stripes_.load(std::memory_order_acquire);
-            stripes_hazard_->setHazard(cur);
-        } while(stripes_.load(std::memory_order_acquire) != cur);
+        // Load the current stripes and set a hazard pointer
+        cur = stripes_hazard_->loadAndSetHazard(stripes_, 0);
 
         // Size is always a power of two
         size_t idx = hash_code & (cur->size() - 1);

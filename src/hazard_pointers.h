@@ -174,6 +174,19 @@ public:
         setHazard(0, value);
     }
 
+    /**
+     * Load an atomic value and set the hazard, looping as necessary to
+     * prevent intervening mutations of the pointer.
+     */
+    T* loadAndSetHazard(std::atomic<T*> &value, int k) {
+        T* cur = nullptr;
+        do {
+            cur = value.load(std::memory_order_acquire);
+            setHazard(k, cur);
+        } while (cur != value.load(std::memory_order_acquire));
+        return cur;
+    }
+
     /** Clear the hazardous reference `k`. */
     void clearHazard(int k) {
         // XXX assert k <= pointers.size()
