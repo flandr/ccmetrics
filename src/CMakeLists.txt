@@ -14,6 +14,7 @@ set(ccmetrics_SHARED_LIBRARY
 
 # giant mega nightmare :(
 set(libccmetrics_SRCS
+    metric_registry.cc
     metrics/counter.cc
     metrics/striped_int64.cc
     thread_local_random.cc

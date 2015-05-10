@@ -10,6 +10,7 @@ include_directories(
 add_executable(test
     driver.cc
     hazard_pointer_test.cc
+    metric_registry_test.cc
     metrics/counter_test.cc
     metrics/striped_int64_test.cc
     thread_local_random_test.cc
