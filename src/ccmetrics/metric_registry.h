@@ -57,6 +57,22 @@ private:
     MetricRegistryImpl *impl_;
 };
 
+/**
+ * Increment the named counter from the registry.
+ *
+ * The counter reference binding is on-first-use; neither `name` nor `reference`
+ * changes after that point will have any effect.
+ *
+ * @param name the counter name
+ * @param registry a registry reference
+ */
+#define INCREMENT_COUNTER(name, registry)                       \
+    do {                                                        \
+    STATIC_DEFINE_ONCE(ccmetrics::Counter*, ANON_VAR(counter),  \
+        registry.counter(name));                                \
+    ANON_VAR(counter)->inc();                                   \
+    }  while (0)
+
 } // ccmetrics namespace
 
 #endif // SRC_CCMETRICS_METRIC_REGISTRY_H_

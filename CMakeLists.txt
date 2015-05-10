@@ -33,3 +33,4 @@ ENDIF(APPLE)
 # Recurse
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(example)

@@ -23,6 +23,11 @@
 
 namespace ccmetrics {
 
+// Preprocessor hackery for anonymous variables
+#define PASTE_IMPL(x, y) x ## y
+#define PASTE(x, y) PASTE_IMPL(x, y)
+#define ANON_VAR(var) PASTE(var, __LINE__)
+
 #if !defined(_WIN32)
 #define STATIC_DEFINE_ONCE(type, var, stmt) static type var = stmt
 #else
@@ -38,11 +43,6 @@ namespace ccmetrics {
 
 // States for lock checking
 enum { uninitialized = 0, initializing, initialized };
-
-// Preprocessor hackery for anonymous variables
-#define PASTE_IMPL(x, y) x ## y
-#define PASTE(x, y) PASTE_IMPL(x, y)
-#define ANON_VAR(var) PASTE(var, __LINE__)
 
 #define STATIC_DEFINE_ONCE(type, var, stmt)                     \
     static type var;                                            \
