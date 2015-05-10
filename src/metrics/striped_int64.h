@@ -59,6 +59,7 @@ public:
 
     /** += value. */
     void add(int64_t value);
+    void addSlow(int64_t value, Striped64_Storage* cur, size_t &hash_code);
 private:
     std::atomic<int64_t> base_;
     std::atomic<Striped64_Storage*> stripes_;
@@ -118,6 +119,34 @@ private:
     size_t size_;
     CacheAligned<std::atomic<int64_t>> **data_;
 };
+
+inline void Striped64::add(int64_t value) {
+    Striped64_Storage *cur = stripes_.load(std::memory_order_acquire);
+    if (!cur) {
+        // Attempt to update the base, checking for contention
+        int64_t expected = base_.load(std::memory_order_relaxed);
+        int64_t update = expected + value;
+        if (base_.compare_exchange_strong(expected, update)) {
+            // No contention; move along
+            return;
+        }
+    }
+    size_t& hash_code = *thread_hash_code_;
+    if (cur) {
+        // Is it really worth it to skip the hazard pointer on the
+        // uncontended case?
+        cur = stripes_hazard_->loadAndSetHazard(stripes_, 0);
+        auto& slot = cur->get(hash_code & (cur->size() - 1));
+        int64_t expected = slot;
+        int64_t update = expected + value;
+        if (slot.compare_exchange_strong(expected, update)) {
+            stripes_hazard_->clearHazard(0);
+            return;
+        }
+    }
+    // Slow path
+    addSlow(value, cur, hash_code);
+}
 
 } // ccmetrics namespace
 

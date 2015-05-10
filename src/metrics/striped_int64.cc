@@ -85,20 +85,9 @@ int64_t Striped64::value() {
 
 static const int STRIPE_LIMIT = 8; // XXX made up
 
-void Striped64::add(int64_t value) {
-    Striped64_Storage *cur = stripes_.load(std::memory_order_acquire);
-    if (!cur) {
-        // Attempt to update the base, checking for contention
-        int64_t expected = base_.load(std::memory_order_relaxed);
-        int64_t update = expected + value;
-        if (base_.compare_exchange_strong(expected, update)) {
-            // No contention; move along
-            return;
-        }
-    }
-
+void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
+        size_t& hash_code) {
     bool contended = false;
-    size_t& hash_code = *thread_hash_code_;
     for (;;) {
         if (!cur) {
             cur = new Striped64_Storage();
@@ -188,7 +177,7 @@ void Striped64_Storage::disavow_all() {
     clean_created_ = false;
 }
 
-inline std::atomic<int64_t>& Striped64_Storage::get(size_t idx) {
+std::atomic<int64_t>& Striped64_Storage::get(size_t idx) {
     return data_[idx]->data;
 }
 
