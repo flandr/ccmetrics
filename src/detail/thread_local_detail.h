@@ -30,7 +30,7 @@
 #include <system_error>
 #include <vector>
 
-#include "detail/define_once.h"
+#include "ccmetrics/detail/define_once.h"
 
 namespace ccmetrics {
 
