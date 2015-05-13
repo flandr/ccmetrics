@@ -8,6 +8,7 @@ include_directories(
 )
 
 add_executable(test
+    concurrent_skip_list_map_test.cc
     driver.cc
     hazard_pointer_test.cc
     metric_registry_test.cc

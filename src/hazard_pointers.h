@@ -195,6 +195,20 @@ public:
         return cur;
     }
 
+    /**
+     * Try once to load and set the hazard, returning whether successful.
+     */
+    bool loadAndSetHazardOrFail(std::atomic<T*> &value, int k, T** ptr) {
+        T* cur = value.load(std::memory_order_acquire);
+        setHazard(k, cur);
+        if (cur != value.load(std::memory_order_acquire)) {
+            clearHazard(k);
+            return false;
+        }
+        *ptr = cur;
+        return true;
+    }
+
     /** Clear the hazardous reference `k`. */
     void clearHazard(int k) {
         // XXX assert k <= pointers.size()
