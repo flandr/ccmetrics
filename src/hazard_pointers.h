@@ -91,6 +91,14 @@ private:
 template<typename T, int K>
 HazardPointers<T, K>::~HazardPointers() {
     auto *hp = head_.load();
+
+    if (hp) {
+        // Force cleanup to avoid memory leaks for small numbers of retired
+        // nodes in hazard pointers
+        hp->helpScan();
+        hp->scan();
+    }
+
     while (hp) {
         auto rm = hp;
         hp = hp->next_;
@@ -269,7 +277,7 @@ void HazardPointer<T, K>::helpScan() {
     // Process all HP nodes, cleaning up for anybody left nodes behind
     auto *hp = owner_->head_.load(std::memory_order_acquire);
     for ( ; hp != nullptr; hp = hp->next_) {
-        if (hp->active_) {
+        if (hp == this) {
             continue;
         }
         bool inactive = false;
