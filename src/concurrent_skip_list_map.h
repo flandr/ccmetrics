@@ -22,6 +22,7 @@
 #define SRC_CONCURRENT_SKIP_LIST_MAP_H_
 
 #include <atomic>
+#include <vector>
 
 #include <assert.h> // XXX
 
@@ -60,6 +61,10 @@ public:
 
     /** @return the first key, _or a default-constructed key if empty_. */
     Key firstKey();
+
+    /** @return a weakly consistent snapshot of the values in the map.
+     *          _Note carefully_ that the values may not be in key order. */
+    std::vector<Value> values();
 
     void printLevel(int i) {
         Node *n = head_->next_[i];
@@ -378,11 +383,59 @@ Key ConcurrentSkipListMap<Key, Value>::firstKey() {
     auto& hp = *smr_.hp;
     Node* cur;
     do {
-        cur = hp.loadAndSetHazard(head_->next_[0], 1);
+        cur = hp.loadAndSetHazard(head_->next_[0], 1); // hp1
     } while (marked(cur));
 
     Key ret = cur ? cur->key : Key();
     hp.clearHazard(1);
+    return ret;
+}
+
+template<typename Key, typename Value>
+std::vector<Value> ConcurrentSkipListMap<Key, Value>::values() {
+    auto& hp = *smr_.hp;
+    std::vector<Value> ret;
+
+    // This algorithm is similar to Find on level-0 (MM's Find), but restarts
+    // only when *both* prev and next are inconsistent.
+try_again:
+    Node* prev = head_;
+    Node* next = nullptr;
+    Node* cur = hp.loadAndSetHazard(prev->next_[0], 1); // hp1
+
+    for (;;) {
+        if (!cur) {
+            break;
+        }
+
+        ret.push_back(cur->value);
+
+        next = hp.loadAndSetHazard(cur->next_[0], 0); // hp0
+        while (marked(next)) {
+            // Current node is being deleted. Spin on reloading cur from prev
+            // and give up if prev goes inconsistent as well.
+            cur = hp.loadAndSetHazard(prev->next_[0], 1); // hp1
+            if (marked(cur)) {
+                goto try_again;
+            } else if (cur) {
+                next = hp.loadAndSetHazard(cur->next_[0], 0); // hp0
+                // XXX note that we're ignoring the value of cur in this case.
+                // we could return it as well...
+            } else {
+                next = nullptr;
+            }
+        }
+        prev = cur;
+        hp.setHazard(2, prev); // hp2
+
+        cur = next;
+        hp.setHazard(1, cur); // hp1
+    }
+
+    hp.clearHazard(0);
+    hp.clearHazard(1);
+    hp.clearHazard(2);
+
     return ret;
 }
 

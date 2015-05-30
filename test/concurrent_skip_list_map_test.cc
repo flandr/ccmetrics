@@ -170,6 +170,21 @@ TEST(ConcurrentSkipListMapTest, FirstKey) {
     ASSERT_TRUE(map.exists(fk));
 }
 
+TEST(ConcurrentSkipListMapTest, Values) {
+    ConcurrentSkipListMap<int, int> map;
+    ASSERT_TRUE(map.values().empty());
+
+    for (int i = 0; i < 10; ++i) {
+        map.insert(i, i * 10);
+    }
+
+    auto values = map.values();
+
+    for (int i = 0; i < 10; ++i) {
+        ASSERT_EQ(i * 10, values[i]);
+    }
+}
+
 TEST(ConcurrentSkipListMapTest, ConcurrentMutationStress) {
     ConcurrentSkipListMap<int, int> map;
     const int kSize = 1000;
