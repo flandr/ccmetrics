@@ -69,6 +69,7 @@ private:
     std::map<Key, Value> map;
 };
 
+// Just exists for comparing instruction fetch costs
 TEST(ConcurrentSkipListMapTest, StdMap) {
     MapWrapper<int, int> map;
 
@@ -153,6 +154,20 @@ TEST(ConcurrentSkipListMapTest, BasicFunctionality) {
     // Likewise, you can't look them up
     int val;
     ASSERT_FALSE(map.find(kSize, &val));
+}
+
+TEST(ConcurrentSkipListMapTest, FirstKey) {
+    ConcurrentSkipListMap<int, int> map;
+    // Returns default-constructed key for empty map
+    int fk = map.firstKey();
+    ASSERT_EQ(0, fk);
+    ASSERT_FALSE(map.exists(fk));
+
+    map.insert(2, 2);
+    map.insert(1, 1);
+    fk = map.firstKey();
+    ASSERT_EQ(1, fk);
+    ASSERT_TRUE(map.exists(fk));
 }
 
 TEST(ConcurrentSkipListMapTest, ConcurrentMutationStress) {

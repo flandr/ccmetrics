@@ -58,6 +58,9 @@ public:
     /** @return whether the key existed (and thus was erased). */
     bool erase(Key const& key);
 
+    /** @return the first key, _or a default-constructed key if empty_. */
+    Key firstKey();
+
     void printLevel(int i) {
         Node *n = head_->next_[i];
         while (n) {
@@ -368,6 +371,19 @@ bool ConcurrentSkipListMap<Key, Value>::find(Key const& key, Value *value) {
     hp.clearHazard(2);
 
     return result.match;
+}
+
+template<typename Key, typename Value>
+Key ConcurrentSkipListMap<Key, Value>::firstKey() {
+    auto& hp = *smr_.hp;
+    Node* cur;
+    do {
+        cur = hp.loadAndSetHazard(head_->next_[0], 1);
+    } while (marked(cur));
+
+    Key ret = cur ? cur->key : Key();
+    hp.clearHazard(1);
+    return ret;
 }
 
 template<typename Key, typename Value>
