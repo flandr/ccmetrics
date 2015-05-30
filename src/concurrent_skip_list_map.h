@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <assert.h> // XXX
+#include <string.h>
 
 #include "hazard_pointers.h"
 #include "thread_local_random.h"

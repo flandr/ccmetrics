@@ -13,6 +13,7 @@ add_executable(test
     hazard_pointer_test.cc
     metric_registry_test.cc
     metrics/counter_test.cc
+    metrics/exponential_reservoir_test.cc
     metrics/striped_int64_test.cc
     snapshot_test.cc
     thread_local_random_test.cc
