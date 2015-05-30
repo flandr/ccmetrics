@@ -88,6 +88,7 @@ static const int STRIPE_LIMIT = 8; // XXX made up
 void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
         size_t& hash_code) {
     bool contended = false;
+    auto& hp = *stripes_hazard_;
     for (;;) {
         if (!cur) {
             cur = new Striped64_Storage();
@@ -102,7 +103,7 @@ void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
         }
 
         // Load the current stripes and set a hazard pointer
-        cur = stripes_hazard_->loadAndSetHazard(stripes_, 0);
+        cur = hp.loadAndSetHazard(stripes_, 0);
 
         // Size is always a power of two
         size_t idx = hash_code & (cur->size() - 1);
@@ -124,7 +125,7 @@ void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
                 // Successfully grew the table; remember to free the existing
                 // and then go do the update again
                 cur->disavow_all();
-                stripes_hazard_->retireNode(cur);
+                hp.retireNode(cur);
                 // XXX you could have set the hazard and skipped the load on
                 // the next go-round
             } else {
@@ -143,7 +144,7 @@ void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
     }
 
     // Clear the hazard
-    stripes_hazard_->clearHazard(0);
+    hp.clearHazard(0);
 }
 
 Striped64_Storage::Striped64_Storage() : clean_created_(true), owner_(true),
