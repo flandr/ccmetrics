@@ -34,6 +34,10 @@ int64_t ThreadLocalRandom::next() {
         std::numeric_limits<int64_t>::max())(state_.generator);
 }
 
+double ThreadLocalRandom::nextDouble() {
+    return std::uniform_real_distribution<double>(0, 1)(state_.generator);
+}
+
 static uint32_t advanceSeed(std::atomic<uint32_t> *seed) {
     // Using (arbitrarily) H_0 from SHA-256 as the increment
     return (*seed) += 0x6a09e667U;

@@ -49,6 +49,8 @@ public:
     /** @return the next random value in [0, numeric_limits<int64_t>::max]. */
     int64_t next();
 
+    /** @return the next random value in [0, 1). */
+    double nextDouble();
 protected:
     // Visible for testing
     ThreadLocalRandom();
