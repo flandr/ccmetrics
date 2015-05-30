@@ -14,6 +14,7 @@ add_executable(test
     metric_registry_test.cc
     metrics/counter_test.cc
     metrics/striped_int64_test.cc
+    snapshot_test.cc
     thread_local_random_test.cc
     thread_local_test.cc
 )
