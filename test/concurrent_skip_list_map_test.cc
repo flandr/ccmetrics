@@ -185,6 +185,21 @@ TEST(ConcurrentSkipListMapTest, Values) {
     }
 }
 
+TEST(ConcurrentSkipListMapTest, Entries) {
+    ConcurrentSkipListMap<int, int> map;
+
+    for (int i = 0; i < 10; ++i) {
+        map.insert(i, i * 10);
+    }
+
+    auto entries = map.entries();
+
+    for (int i = 0; i < 10; ++i) {
+        ASSERT_EQ(i, entries[i].first);
+        ASSERT_EQ(i * 10, entries[i].second);
+    }
+}
+
 TEST(ConcurrentSkipListMapTest, ConcurrentMutationStress) {
     ConcurrentSkipListMap<int, int> map;
     const int kSize = 1000;

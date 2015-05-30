@@ -66,6 +66,9 @@ public:
      *          _Note carefully_ that the values may not be in key order. */
     std::vector<Value> values();
 
+    /** @return a weakly consitent snapshot of entries in the map. */
+    std::vector<std::pair<Key, Value>> entries();
+
     void printLevel(int i) {
         Node *n = head_->next_[i];
         while (n) {
@@ -140,6 +143,9 @@ private:
 
     /** Takes a snapshot for nodes around `key`; see above. */
     FindResult find(Key const& key);
+
+    template<typename Ret, typename Func>
+    Ret extractor(Func const& f);
 
     Node *head_;
     int height_; // XXX atomic
@@ -392,9 +398,10 @@ Key ConcurrentSkipListMap<Key, Value>::firstKey() {
 }
 
 template<typename Key, typename Value>
-std::vector<Value> ConcurrentSkipListMap<Key, Value>::values() {
+template<typename Ret, typename Func>
+Ret ConcurrentSkipListMap<Key, Value>::extractor(Func const& f) {
     auto& hp = *smr_.hp;
-    std::vector<Value> ret;
+    Ret ret;
 
     // This algorithm is similar to Find on level-0 (MM's Find), but restarts
     // only when *both* prev and next are inconsistent.
@@ -408,7 +415,7 @@ try_again:
             break;
         }
 
-        ret.push_back(cur->value);
+        ret.push_back(f(cur));
 
         next = hp.loadAndSetHazard(cur->next_[0], 0); // hp0
         while (marked(next)) {
@@ -437,6 +444,22 @@ try_again:
     hp.clearHazard(2);
 
     return ret;
+}
+
+template<typename Key, typename Value>
+std::vector<Value> ConcurrentSkipListMap<Key, Value>::values() {
+    return extractor<std::vector<Value>>([](Node *n) -> Value {
+            return n->value;
+        });
+}
+
+template<typename Key, typename Value>
+std::vector<std::pair<Key, Value>>
+ConcurrentSkipListMap<Key, Value>::entries() {
+    return extractor<std::vector<std::pair<Key, Value>>>(
+        [](Node *n) -> std::pair<Key, Value> {
+            return std::make_pair(n->key, n->value);
+        });
 }
 
 template<typename Key, typename Value>
