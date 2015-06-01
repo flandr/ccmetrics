@@ -67,9 +67,9 @@ public:
     explicit ScopedTimer(Timer *t)
         : start_(std::chrono::steady_clock::now()), t_(t) { }
     ~ScopedTimer() {
-        auto delta_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        auto delta_us = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::steady_clock::now() - start_);
-        t_->update(delta_ms.count());
+        t_->update(delta_us.count());
     }
 private:
     decltype(std::chrono::steady_clock::now()) start_;

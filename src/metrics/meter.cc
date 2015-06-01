@@ -38,10 +38,10 @@ void RateEWMA::update(int64_t val) {
 void RateEWMA::tickIfNecessary() {
     auto now = std::chrono::steady_clock::now();
     auto prev = last_tick_.load();
-    auto delta_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+    auto delta_us = std::chrono::duration_cast<std::chrono::microseconds>(
         now - prev.t);
 
-    if (delta_ms.count() < kInterval * 1000) {
+    if (delta_us.count() < kInterval * 1E6) {
         return;
     }
 
@@ -49,7 +49,7 @@ void RateEWMA::tickIfNecessary() {
         return;
     }
 
-    int iters = delta_ms.count() / (kInterval * 1000);
+    int iters = delta_us.count() / (kInterval * 1E6);
     for (int i = 0; i < iters; ++i) {
         // TODO: this could be done more efficiently (wrt atomic CAS) within
         // the tick method itself. Consider inlining.
