@@ -18,6 +18,9 @@
  * SOFTWARE.
  */
 
+#ifndef SRC_CCMETRICS_SNAPSHOT_H_
+#define SRC_CCMETRICS_SNAPSHOT_H_
+
 #include <cinttypes>
 #include <vector>
 
@@ -69,3 +72,5 @@ private:
 };
 
 } // ccmetrics namespace
+
+#endif // SRC_CCMETRICS_SNAPSHOT_H_
