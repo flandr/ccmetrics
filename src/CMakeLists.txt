@@ -2,7 +2,7 @@ project(ccmetrics-library C CXX)
 
 # Define the public include directories
 set(ccmetrics_PUBLIC_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/ccmetrics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ccmetrics
     CACHE INTERNAL "ccmetrics public include directories"
 )
 
@@ -51,14 +51,14 @@ ${EXTRA_LIBS}
 )
 
 # Installation
-#install(TARGETS
-#${ccmetrics_SHARED_LIBRARY}
-#DESTINATION lib
-#EXPORT ccmetrics-targets)
-#install(EXPORT ccmetrics-targets DESTINATION lib)
+install(TARGETS
+${ccmetrics_SHARED_LIBRARY}
+DESTINATION lib
+EXPORT ccmetrics-targets)
+install(EXPORT ccmetrics-targets DESTINATION lib)
 
 install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/ccmetrics
-    DESTINATION include/ccmetrics
+    ${CMAKE_CURRENT_SOURCE_DIR}/ccmetrics
+    DESTINATION include
     FILES_MATCHING PATTERN "*.h"
 )
