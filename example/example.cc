@@ -50,7 +50,7 @@ void slow(int iters) {
     SCOPED_TIMER("slow", registry());
     for (int i = 0; i < iters; ++i) {
         SCOPED_TIMER("fast", registry());
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
 
