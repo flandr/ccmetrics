@@ -29,6 +29,7 @@
 #include "ccmetrics/snapshot.h"
 #include "concurrent_skip_list_map.h"
 #include "hazard_pointers.h"
+#include "metrics/cwg1778hack.h"
 
 namespace ccmetrics {
 
@@ -83,15 +84,6 @@ private:
     }
 
     std::atomic<Data*> data_;
-
-    // http://cplusplus.github.io/LWG/lwg-active.html#2165
-    struct CWG1778Hack {
-        CWG1778Hack() noexcept { } // This is the hack.
-        decltype(std::chrono::steady_clock::now()) t;
-        explicit CWG1778Hack(
-            decltype(std::chrono::steady_clock::now()) &&t)
-            : t(std::move(t)) { }
-    };
 
     // Time point for next rescaling
     std::atomic<CWG1778Hack> next_scale_;

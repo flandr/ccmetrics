@@ -17,6 +17,7 @@ set(libccmetrics_SRCS
     metric_registry.cc
     metrics/counter.cc
     metrics/exponential_reservoir.cc
+    metrics/meter.cc
     metrics/striped_int64.cc
     snapshot.cc
     thread_local_random.cc
