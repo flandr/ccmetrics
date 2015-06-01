@@ -24,9 +24,11 @@
 #include <map>
 #include <string>
 
+#include "ccmetrics/counter.h"
+#include "ccmetrics/timer.h"
+
 namespace ccmetrics {
 
-class Counter;
 class MetricRegistryImpl;
 
 /**
@@ -49,8 +51,13 @@ public:
     /** @return a new or existing counter. */
     Counter* counter(std::string const& name);
 
+    /** @return a new or existing timer. */
+    Timer* timer(std::string const& name);
+
     /** @return all registered counter metrics. */
     std::map<std::string, Counter*> counters() const;
+
+    std::map<std::string, Timer*> timers() const;
 private:
     MetricRegistry(MetricRegistry const&) = delete;
     MetricRegistry& operator=(MetricRegistry const&) = delete;
@@ -72,6 +79,14 @@ private:
         registry.counter(name));                                \
     ANON_VAR(counter)->inc();                                   \
     }  while (0)
+
+/**
+ * Record the duration of execution whtin a scope.
+ */
+#define SCOPED_TIMER(name, registry)                            \
+    STATIC_DEFINE_ONCE(ccmetrics::Timer*, ANON_VAR(timer),      \
+        registry.timer(name));                                  \
+    ccmetrics::ScopedTimer ANON_VAR(scoped_timer)(ANON_VAR(timer))
 
 } // ccmetrics namespace
 

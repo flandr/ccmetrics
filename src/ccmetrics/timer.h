@@ -22,6 +22,7 @@
 #define SRC_CCMETRICS_TIMER_H_
 
 #include <cinttypes>
+#include <chrono>
 
 #include "ccmetrics/snapshot.h"
 
@@ -59,6 +60,20 @@ private:
     Timer(Timer const&) = delete;
     Timer& operator=(Timer const&) = delete;
     TimerImpl *impl_;
+};
+
+class ScopedTimer {
+public:
+    explicit ScopedTimer(Timer *t)
+        : start_(std::chrono::steady_clock::now()), t_(t) { }
+    ~ScopedTimer() {
+        auto delta_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - start_);
+        t_->update(delta_ms.count());
+    }
+private:
+    decltype(std::chrono::steady_clock::now()) start_;
+    Timer *t_;
 };
 
 } // ccmetrics namespace

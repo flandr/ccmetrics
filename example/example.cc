@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include <thread>
+
 #include "ccmetrics/counter.h"
 #include "ccmetrics/metric_registry.h"
 #include "ccmetrics/detail/define_once.h"
@@ -44,6 +46,14 @@ void bar(int iters) {
     }
 }
 
+void slow(int iters) {
+    SCOPED_TIMER("slow", registry());
+    for (int i = 0; i < iters; ++i) {
+        SCOPED_TIMER("fast", registry());
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+}
+
 int main(int argc, char **argv) {
     int iters = 1000;
     if (argc == 2) {
@@ -51,9 +61,18 @@ int main(int argc, char **argv) {
     }
     foo(iters);
     bar(iters);
+    slow(iters);
     printf("Counters:\n");
     for (auto& entry : registry().counters()) {
         printf("%-20s %8" PRId64"\n", entry.first.c_str(),
             entry.second->value());
+    }
+    printf("Timers:\n");
+    for (auto& entry : registry().timers()) {
+        auto* timer = entry.second;
+        printf("%-20s %8" PRId64" %8f %8f %8f\n", entry.first.c_str(),
+               timer->count(), timer->oneMinuteRate(),
+               timer->fiveMinuteRate(),
+               timer->fifteenMinuteRate());
     }
 }

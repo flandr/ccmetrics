@@ -38,5 +38,17 @@ TEST(MetricRegistryTest, CreateCounters) {
     ASSERT_EQ(2U, counters.size());
 }
 
+TEST(MetricRegistryTest,CreateTimers) {
+    MetricRegistry reg;
+    Timer *t1 = reg.timer("foo");
+    Timer *t2 = reg.timer("bar");
+    ASSERT_NE(t1, t2);
+    Timer *t1_again = reg.timer("foo");
+    ASSERT_EQ(t1, t1_again);
+
+    auto timers = reg.timers();
+    ASSERT_EQ(2U, timers.size());
+}
+
 } // test namespace
 } // ccmetrics namespace

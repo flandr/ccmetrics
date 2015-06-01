@@ -27,6 +27,7 @@
 #include <unordered_map>
 
 #include "ccmetrics/counter.h"
+#include "ccmetrics/timer.h"
 
 namespace ccmetrics {
 
@@ -44,10 +45,17 @@ public:
     /** @return a new or existing counter. */
     Counter* counter(std::string const& name);
 
+    /** @return a new or existing tiemr. */
+    Timer* timer(std::string const& name);
+
     /** @return all registered counter metrics. */
     std::map<std::string, Counter*> counters() const;
+
+    /** @return all registered timer metrics. */
+    std::map<std::string, Timer*> timers() const;
 private:
     MetricMap<Counter> counters_;
+    MetricMap<Timer> timers_;
 };
 
 } // ccmetrics namespace

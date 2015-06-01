@@ -63,8 +63,23 @@ Counter* MetricRegistryImpl::counter(std::string const& name) {
     return ret;
 }
 
+Timer* MetricRegistryImpl::timer(std::string const& name) {
+    std::lock_guard<std::mutex> lock(timers_.mutex);
+    auto exist = timers_.metrics.find(name);
+    if (exist != timers_.metrics.end()) {
+        return exist->second;
+    }
+    Timer *ret = new Timer();
+    timers_.metrics.insert(std::make_pair(name, ret));
+    return ret;
+}
+
 std::map<std::string, Counter*> MetricRegistryImpl::counters() const {
     return toMap(counters_);
+}
+
+std::map<std::string, Timer*> MetricRegistryImpl::timers() const {
+    return toMap(timers_);
 }
 
 //
@@ -78,6 +93,12 @@ Counter* MetricRegistry::counter(std::string const& name) {
 }
 std::map<std::string, Counter*> MetricRegistry::counters() const {
     return impl_->counters();
+}
+Timer* MetricRegistry::timer(std::string const& name) {
+    return impl_->timer(name);
+}
+std::map<std::string, Timer*> MetricRegistry::timers() const {
+    return impl_->timers();
 }
 
 } // ccmetrics namespace
