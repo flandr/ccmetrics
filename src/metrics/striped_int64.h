@@ -57,6 +57,9 @@ public:
     /** @return the current value, with consistency caveats as above. */
     int64_t value();
 
+    /** Reset to zero. */
+    void reset();
+
     /** += value. */
     void add(int64_t value);
     void addSlow(int64_t value, Striped64_Storage* cur, size_t &hash_code);

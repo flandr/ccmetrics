@@ -64,6 +64,15 @@ TEST(Striped64Test, BasicFunctionality) {
     ASSERT_EQ(1, val2.value());
 }
 
+TEST(Striped64Test, Reset) {
+    Striped64 val;
+    val.add(1);
+    ASSERT_EQ(1, val.value());
+
+    val.reset();
+    ASSERT_EQ(0, val.value());
+}
+
 // Non-deterministic but expected to exercise concurrent updates
 TEST(Striped64Test, ConcurrencySmokeTest) {
     Striped64 val;
@@ -82,6 +91,11 @@ TEST(Striped64Test, ConcurrencySmokeTest) {
     }
 
     ASSERT_EQ(K * N, val.value());
+
+    // Also assert reset; this test has a good chance of using the storage
+    // other than base
+    val.reset();
+    ASSERT_EQ(0, val.value());
 }
 
 } // test namespace

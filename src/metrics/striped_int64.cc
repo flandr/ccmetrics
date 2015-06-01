@@ -83,6 +83,19 @@ int64_t Striped64::value() {
     return ret;
 }
 
+void Striped64::reset() {
+    base_.store(0, std::memory_order_release);
+    Striped64_Storage *cur = stripes_hazard_->loadAndSetHazard(stripes_, 0);
+    if (!cur) {
+        return;
+    }
+    size_t cur_len = cur->size();
+    for (int i = 0; i < cur_len; ++i) {
+        cur->get(i).store(0, std::memory_order_release);
+    }
+    stripes_hazard_->clearHazard(0);
+}
+
 static const int STRIPE_LIMIT = 8; // XXX made up
 
 void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
