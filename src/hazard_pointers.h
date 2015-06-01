@@ -18,6 +18,9 @@
  * SOFTWARE.
  */
 
+#ifndef SRC_METRICS_HAZARD_POINTERS_H_
+#define SRC_METRICS_HAZARD_POINTERS_H_
+
 #include <array>
 #include <atomic>
 #include <unordered_set>
@@ -314,3 +317,5 @@ void HazardPointer<T, K>::helpScan() {
 }
 
 } // ccmetrics namespace
+
+#endif // SRC_METRICS_HAZARD_POINTERS_H_
