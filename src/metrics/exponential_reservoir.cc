@@ -52,7 +52,7 @@ void ExponentialReservoir::update(int64_t value) {
     auto& values = data->map;
 
     double delta = std::chrono::duration<double>(now - data->landmark).count();
-    double priority = std::exp(-kAlpha * delta) /
+    double priority = std::exp(kAlpha * delta) /
         (1.0 - ThreadLocalRandom::current().nextDouble());
 
     if (data->count.fetch_add(1) < kSize) {
