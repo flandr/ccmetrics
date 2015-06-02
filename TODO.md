@@ -13,4 +13,3 @@ Basic necessities
 # Improvements
 
  - Relax ordering for clearHazard
- - No index looping on height=0 insertions in CSLM
