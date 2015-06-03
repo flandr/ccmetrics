@@ -65,6 +65,9 @@ public:
     /** @return the 99th precentile. */
     double get99tile() const { return valueAt(0.99); }
 
+    /** @return the 99.9th percentil. */
+    double get999tile() const { return valueAt(0.999); }
+
     /** @return the valuue of the distribution at the quantile [0, 1] */
     double valueAt(double quantile) const;
 private:
