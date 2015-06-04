@@ -281,6 +281,7 @@ void HazardPointer<T, K>::scan() {
         if (live.find(*iter) != live.end()) {
             // Still kicking
             ++iter;
+            continue;
         }
         // Swap-and-delete vector cleanup idiom
         std::swap(*iter, retire_list_.back());
