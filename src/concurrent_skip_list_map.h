@@ -86,6 +86,8 @@ private:
         const Key key;
         const Value value;
         const uint8_t height;
+        // Reference count for concurrent unlink / deletion
+        std::atomic<uint8_t> link_count;
         std::atomic<Node*> *next_;
 
         ~Node() {
@@ -165,7 +167,7 @@ template<typename Key, typename Value>
 typename ConcurrentSkipListMap<Key, Value>::Node*
 ConcurrentSkipListMap<Key, Value>::mkNode(
         int height, Key const& key, Value const& value) {
-    Node* ret = new Node({key, value, (uint8_t) height, nullptr});
+    Node* ret = new Node{key, value, (uint8_t) height, {0}, nullptr};
     ret->next_ = new std::atomic<Node*>[height];
     memset(ret->next_, 0, height * sizeof(*ret->next_));
     return ret;
@@ -276,10 +278,9 @@ try_again:
                     // Restart.
                     goto try_again;
                 }
-                // Successfully unlinked. If this was level-0, then the node
-                // has been fully unlinked and can be retired
-                if (i == 0) {
-                    // Dump your own hazard pointer before retiring
+                // Successfully unlinked. Drop a reference and if it was the
+                // last one, retire.
+                if (--cur->link_count == 0) {
                     hp.clearHazard(1);
                     hp.retireNode(cur);
                 }
@@ -497,6 +498,9 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
     Node *n = mkNode(level + 1, key, value);
     hp.setHazard(3, n);
 
+    // Assume we'll fully insert into all lists
+    n->link_count = n->height;
+
     for (;;) {
         n->next_[0].store(result.cur);
         if (result.prev->next_[0].compare_exchange_strong(result.cur, n)) {
@@ -529,6 +533,7 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
     // inconsistency. This only impacts performance, not correctness.
     Node *prev = head_;
     Node *next = nullptr;
+    int overage = n->height - 1; // See exit
     for (int i = std::max(level, height_); i > 0; --i) {
         Node *cur = hp.loadAndSetHazard(prev->next_[i], 1); // hp1
         if (marked(cur)) {
@@ -564,12 +569,24 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
                 goto exit;
             }
         }
+
+        --overage;
+
         if (n->dead()) {
             // We were concurrently erased; just give up and get out.
             goto exit;
         }
     }
 exit:
+
+    if (overage > 0) {
+        // We've overcounted the number of linked levels due to one or more
+        // insertion failures. Drop the reference count. If we take it to
+        // zero, we should retire the node.
+        if ((n->link_count -= overage) == 0) {
+            hp.retireNode(n);
+        }
+    }
 
     hp.clearHazard(0);
     hp.clearHazard(1);
