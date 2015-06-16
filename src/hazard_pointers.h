@@ -23,6 +23,7 @@
 
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <unordered_set>
 #include <vector>
 
@@ -119,7 +120,6 @@ HazardPointer<T, K>* HazardPointers<T, K>::allocate() {
             hp = hp->next_;
             continue;
         }
-        // XXX assert hp->active_ now.
         return hp;
     }
 
@@ -175,7 +175,7 @@ public:
 
     /** Set the hazardous reference `k`. */
     void setHazard(int k, T* value) {
-        // XXX assert k <= pointers.size()
+        assert(k < pointers.size());
         pointers[k].store(value, std::memory_order_release);
     }
 
@@ -214,7 +214,7 @@ public:
 
     /** Clear the hazardous reference `k`. */
     void clearHazard(int k) {
-        // XXX assert k <= pointers.size()
+        assert(k < pointers.size());
         pointers[k].store(nullptr, std::memory_order_release);
     }
 

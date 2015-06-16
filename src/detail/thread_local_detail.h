@@ -25,6 +25,7 @@
 #include <pthread.h>
 #endif
 
+#include <cassert>
 #include <cstdint>
 #include <mutex>
 #include <system_error>
@@ -59,17 +60,21 @@ public:
 
     template<typename T>
     void set(uint32_t idx, T *ptr, void(*deleter)(void *)) {
-        // XXX assert idx >= 1
+        assert(idx >= 1);
+
         if (idx > elements_.size()) {
             elements_.resize(idx);
         }
-        // XXX assert elements_[idx].ptr == nullptr
+
+        assert(elements_[idx - 1].ptr == nullptr);
+
         Element e = {ptr, deleter ? deleter : deletePtr<T>};
         elements_[idx - 1] = e;
     }
 
     void* get(uint32_t idx) {
-        // XXX assert idx >= 1
+        assert(idx >= 1);
+
         if (idx > elements_.size()) {
             elements_.resize(idx);
         }
@@ -238,7 +243,8 @@ private:
     }
 
     void addThread(ThreadLocalStorage *tls) {
-        // XXX assert !tls->onList()
+        assert(!tls->onList());
+
         tls->next_ = &all_tls_head_;
         tls->prev_ = all_tls_head_.prev_;
         tls->prev_->next_ = tls;
@@ -246,7 +252,8 @@ private:
     }
 
     void removeThread(ThreadLocalStorage *tls) {
-        // XXX assert tls->onList()
+        assert(tls->onList());
+
         tls->next_->prev_ = tls->prev_;
         tls->prev_->next_ = tls->next_;
         tls->next_ = tls->prev_ = nullptr;
