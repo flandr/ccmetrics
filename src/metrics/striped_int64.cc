@@ -101,14 +101,15 @@ static const int STRIPE_LIMIT = 8; // XXX made up
 void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
         size_t& hash_code) {
     bool contended = false;
+    bool load = true;
     auto& hp = *stripes_hazard_;
     for (;;) {
         if (!cur) {
             cur = new Striped64_Storage();
             Striped64_Storage *none = nullptr;
+            hp.setHazard(0, cur);
             if (stripes_.compare_exchange_strong(none, cur)) {
-                // XXX you could just set the hazard and skip the load below
-                continue;
+                load = false;
             } else {
                 delete cur; // NB leave it non-null for next iteration
                 continue;
@@ -116,7 +117,9 @@ void Striped64::addSlow(int64_t value, Striped64_Storage *cur,
         }
 
         // Load the current stripes and set a hazard pointer
-        cur = hp.loadAndSetHazard(stripes_, 0);
+        if (load) {
+            cur = hp.loadAndSetHazard(stripes_, 0);
+        }
 
         // Size is always a power of two
         size_t idx = hash_code & (cur->size() - 1);
