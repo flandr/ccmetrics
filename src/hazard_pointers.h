@@ -267,7 +267,6 @@ void HazardPointer<T, K>::scan() {
         for (int i = 0; i < K; ++i) {
             T* node = hp->pointers[i].load(std::memory_order_acquire);
             if (node != nullptr) {
-                // XXX debug assert not in set
                 live.insert(node);
             }
         }
