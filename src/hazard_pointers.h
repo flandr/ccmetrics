@@ -142,7 +142,6 @@ HazardPointer<T, K>* HazardPointers<T, K>::allocate() {
 template<typename T, int K>
 void HazardPointers<T, K>::retire(HazardPointer<T, K> *hp) {
     for (int i = 0; i < K; ++i) {
-        // XXX should instead assert this! correct code should have set to null
         hp->pointers[i].store(nullptr, std::memory_order_release);
     }
     hp->active_.store(false, std::memory_order_release);
