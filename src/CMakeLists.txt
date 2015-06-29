@@ -21,6 +21,7 @@ set(libccmetrics_SRCS
     metrics/meter.cc
     metrics/striped_int64.cc
     metrics/timer.cc
+    serializing/json_serializer.cc
     snapshot.cc
     thread_local_random.cc
 )

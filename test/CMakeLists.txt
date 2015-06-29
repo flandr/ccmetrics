@@ -17,6 +17,7 @@ add_executable(test
     metrics/meter_test.cc
     metrics/striped_int64_test.cc
     metrics/timer_test.cc
+    serializing_test.cc
     snapshot_test.cc
     thread_local_random_test.cc
     thread_local_test.cc
