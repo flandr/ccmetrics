@@ -21,6 +21,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # Add third-party dependencies
 include(ExternalProject)
 include(External_gtest)
+include(External_rapidjson)
 
 # Use C++11 when building C++ code
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

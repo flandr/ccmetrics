@@ -8,6 +8,7 @@ def _getIncludes():
     ext = "./third_party"
     build = "./build"
     includes = [os.path.join(ext, "gtest", "include"),
+            os.path.join(build, "rapidjson", "include"),
             os.path.join("src")]
     return ["-I" + x for x in includes]
 
