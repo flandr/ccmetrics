@@ -46,7 +46,10 @@ static inline void* allocateAligned(std::size_t size, std::size_t alignment) {
 #ifdef _WIN32
     p = _aligned_malloc(size, alignment);
 #else
-    posix_memalign(&p, alignment, size);
+    int rc = posix_memalign(&p, alignment, size);
+    if (rc) {
+        throw std::bad_alloc();
+    }
 #endif
     if (!p) {
         throw std::bad_alloc();
