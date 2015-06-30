@@ -61,3 +61,12 @@ Copyright © 2015 Nathan Rosenblum <flander@gmail.com>
 Licensed under the MIT License.
 
 ## References
+
+This library was inspired by the excellent
+Java [metrics](https://github.com/dropwizard/metrics) library, and owes many
+of its interfaces to that project.
+
+ccmetrics uses several other open-source libraries:
+
+ - [RapidJSON](https://github.com/miloyip/rapidjson) for JSON serialization
+ - [Google Test](https://code.google.com/p/googletest) for unit tests

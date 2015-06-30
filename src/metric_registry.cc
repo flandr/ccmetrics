@@ -50,6 +50,7 @@ std::map<std::string, T*> toMap(MetricMap<T> const& mm) {
 
 MetricRegistryImpl::~MetricRegistryImpl() {
     deleteMetrics(counters_);
+    deleteMetrics(timers_);
 }
 
 Counter* MetricRegistryImpl::counter(std::string const& name) {
