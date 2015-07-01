@@ -42,6 +42,9 @@ namespace ccmetrics {
  * for avoiding contention if the rare-creation assumption turns out not
  * to be true, or if serialization on thread creation & deletion is somehow
  * concerning (hint: it's not), or if I add iteration.
+ *
+ * [1] http://www.boost.org/doc/libs/1_58_0/doc/html/thread/thread_local_storage.html
+ * [2] https://github.com/facebook/folly
  */
 template<typename T>
 class ThreadLocalPointer {
