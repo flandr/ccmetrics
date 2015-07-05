@@ -24,7 +24,7 @@ namespace ccmetrics {
 
 #if !defined(WIN32)
 #if defined(TLS_SPECIFIER)
-TLS_SPECIFIER ThreadLocalStorage* ThreadLocalStorageHandle::tls_ = nullptr;
+TLS_SPECIFIER ThreadLocalStorage ThreadLocalStorageHandle::tls_;
 #endif
 #endif
 

@@ -21,6 +21,8 @@
 #ifndef SRC_DETAIL_THREAD_LOCAL_DETAIL_H_H_
 #define SRC_DETAIL_THREAD_LOCAL_DETAIL_H_H_
 
+#include <string.h>
+
 #if !defined(_WIN32)
 #include <pthread.h>
 #endif
@@ -40,7 +42,8 @@ class SharedStorage;
 // Multiplexer of thread-local storage & invasive list element.
 class ThreadLocalStorage {
 public:
-    ThreadLocalStorage() : next_(nullptr), prev_(nullptr) { }
+    constexpr ThreadLocalStorage() : elements_(nullptr), n_elements_(0),
+        next_(nullptr), prev_(nullptr) { }
 
     struct Element {
         void *ptr;
@@ -62,8 +65,8 @@ public:
     void set(uint32_t idx, T *ptr, void(*deleter)(void *)) {
         assert(idx >= 1);
 
-        if (idx > elements_.size()) {
-            elements_.resize(idx);
+        if (idx > n_elements_) {
+            resize(idx);
         }
 
         assert(elements_[idx - 1].ptr == nullptr);
@@ -75,8 +78,8 @@ public:
     void* get(uint32_t idx) {
         assert(idx >= 1);
 
-        if (idx > elements_.size()) {
-            elements_.resize(idx);
+        if (idx > n_elements_) {
+            resize(idx);
         }
         return elements_[idx - 1].ptr;
     }
@@ -84,7 +87,7 @@ public:
     // Like `get`, but returns the element & doesn't expand. For use
     // when destroying.
     Element* getIfPresent(uint32_t idx) {
-        if (idx > elements_.size()) {
+        if (idx > n_elements_) {
             return nullptr;
         }
         return &elements_[idx - 1];
@@ -95,17 +98,41 @@ public:
     }
 
     void destroyAll() {
-        for (auto& element : elements_) {
-            element.destroy();
+        for (size_t i = 0; i < n_elements_; ++i) {
+            elements_[i].destroy();
         }
+        delete [] elements_;
+        elements_ = nullptr;
+        n_elements_ = 0;
     }
+
+    size_t capacity() const { return n_elements_; }
 private:
     template<typename T>
     static void deletePtr(void *ptr) {
         delete static_cast<T*>(ptr);
     }
 
-    std::vector<Element> elements_;
+    void resize(size_t size) {
+        assert(size > n_elements_);
+
+        // Use an expansion factor < 2, which allows for eventual use of
+        // previously allocated blocks by the allocator; see some discussion
+        // at http://stackoverflow.com/questions/5232198/about-vectors-growth.
+        size_t new_size = size * 1.5;
+
+        Element *next = new Element[new_size];
+        memset(next, 0, new_size * sizeof(Element));
+        if (n_elements_ > 0) {
+            memcpy(next, elements_, n_elements_ * sizeof(Element));
+        }
+        delete [] elements_;
+        elements_ = next;
+        n_elements_ = new_size;
+    }
+
+    Element *elements_;
+    size_t n_elements_;
     ThreadLocalStorage *next_;
     ThreadLocalStorage *prev_;
 
@@ -154,15 +181,22 @@ public:
     }
 
     ThreadLocalStorage* get() {
-        ThreadLocalStorage* entry;
-
 #if defined(TLS_SPECIFIER)
-        entry = tls_;
+        if (tls_.capacity() == 0) {
+            int rc = pthread_setspecific(pthread_key_, &tls_);
+            if (rc) {
+                throw std::system_error(rc, std::system_category(),
+                    "pthread_setspecific failed");
+            }
+            // Reserve one slot to avoid subsequent initialization
+            // if the caller doesn't issue get/set. This isn't strictly
+            // necessary, but we'd expect just the single setspecific call.
+            tls_.get(1);
+        }
+        return &tls_;
 #else
-        entry = reinterpret_cast<ThreadLocalStorage*>(
+        ThreadLocalStorage* entry = reinterpret_cast<ThreadLocalStorage*>(
             pthread_getspecific(pthread_key_));
-#endif
-
         if (entry) {
             return entry;
         }
@@ -175,11 +209,8 @@ public:
                 "pthread_setspecific failed");
         }
 
-#if defined(TLS_SPECIFIER)
-        tls_ = entry;
-#endif
-
         return entry;
+#endif
     }
 
     static void threadExitCleanup(void *ptr) {
@@ -187,7 +218,9 @@ public:
         unregisterTlsHelper(tls);
         // The TLS object is inaccessible at this point
         tls->destroyAll();
+#if !defined(TLS_SPECIFIER)
         delete tls;
+#endif
     }
 private:
     ThreadLocalStorageHandle(ThreadLocalStorageHandle const&) = delete;
@@ -195,7 +228,7 @@ private:
         = delete;
 
 #if defined(TLS_SPECIFIER)
-    static TLS_SPECIFIER ThreadLocalStorage *tls_;
+    static TLS_SPECIFIER ThreadLocalStorage tls_;
 #endif
 
     pthread_key_t pthread_key_;
