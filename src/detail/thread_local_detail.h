@@ -124,10 +124,16 @@ void unregisterTlsHelper(ThreadLocalStorage *tls);
 
 class ThreadLocalStorageHandle;
 
+#if defined(__APPLE__) \
+    && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ <= 1060
+#define APPLE_NO_TLS_SPECIFIER
+#endif
+
 #if defined(_WIN32)
 #define TLS_SPECIFIER __declspec(thread)
-#elif defined(__APPLE__)
-// No __thread support w/ Xcode; we'll use pthread_getspecific
+#elif defined(APPLE_NO_TLS_SPECIFIER)
+// No __thread support w/ Xcode for 10.6 & below; we'll use pthread_getspecific
 #else
 #define TLS_SPECIFIER __thread
 #endif
