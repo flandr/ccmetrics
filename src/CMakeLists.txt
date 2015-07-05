@@ -14,6 +14,7 @@ set(ccmetrics_SHARED_LIBRARY
 
 # giant mega nightmare :(
 set(libccmetrics_SRCS
+    detail/thread_local_detail.cc
     metric_registry.cc
     metrics/counter.cc
     metrics/exponential_reservoir.cc

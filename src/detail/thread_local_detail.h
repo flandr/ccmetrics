@@ -114,6 +114,24 @@ private:
 
 void unregisterTlsHelper(ThreadLocalStorage *tls);
 
+// Cleanup-specific code comes in three variants:
+//
+// On windows, use windows magic
+// On Linux, don't use new at all; keep TLS POD for the allocation. Still
+// register a destructor.
+// On OSX, use a ptr.
+// Worth it?
+
+class ThreadLocalStorageHandle;
+
+#if defined(_WIN32)
+#define TLS_SPECIFIER __declspec(thread)
+#elif defined(__APPLE__)
+// No __thread support w/ Xcode; we'll use pthread_getspecific
+#else
+#define TLS_SPECIFIER __thread
+#endif
+
 #if !defined(_WIN32)
 class ThreadLocalStorageHandle {
 public:
@@ -130,18 +148,31 @@ public:
     }
 
     ThreadLocalStorage* get() {
-        ThreadLocalStorage* entry = reinterpret_cast<ThreadLocalStorage*>(
+        ThreadLocalStorage* entry;
+
+#if defined(TLS_SPECIFIER)
+        entry = tls_;
+#else
+        entry = reinterpret_cast<ThreadLocalStorage*>(
             pthread_getspecific(pthread_key_));
+#endif
+
         if (entry) {
             return entry;
         }
         entry = new ThreadLocalStorage();
+
         int rc = pthread_setspecific(pthread_key_, entry);
         if (rc) {
             delete entry;
             throw std::system_error(rc, std::system_category(),
                 "pthread_setspecific failed");
         }
+
+#if defined(TLS_SPECIFIER)
+        tls_ = entry;
+#endif
+
         return entry;
     }
 
@@ -156,6 +187,10 @@ private:
     ThreadLocalStorageHandle(ThreadLocalStorageHandle const&) = delete;
     ThreadLocalStorageHandle& operator=(ThreadLocalStorageHandle const&)
         = delete;
+
+#if defined(TLS_SPECIFIER)
+    static TLS_SPECIFIER ThreadLocalStorage *tls_;
+#endif
 
     pthread_key_t pthread_key_;
 };
