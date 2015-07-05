@@ -141,26 +141,15 @@ private:
 
 void unregisterTlsHelper(ThreadLocalStorage *tls);
 
-// Cleanup-specific code comes in three variants:
-//
-// On windows, use windows magic
-// On Linux, don't use new at all; keep TLS POD for the allocation. Still
-// register a destructor.
-// On OSX, use a ptr.
-// Worth it?
-
 class ThreadLocalStorageHandle;
-
-#if defined(__APPLE__) \
-    && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ <= 1060
-#define APPLE_NO_TLS_SPECIFIER
-#endif
 
 #if defined(_WIN32)
 #define TLS_SPECIFIER __declspec(thread)
-#elif defined(APPLE_NO_TLS_SPECIFIER)
-// No __thread support w/ Xcode for 10.6 & below; we'll use pthread_getspecific
+#elif defined(__APPLE__)
+// Although Apple supports __thread in OS X > 10.6, it interacts badly with
+// pthread_key_create w/ a cleanup callback; in particular, the TLS is no longer
+// available when the callback is invoked, leading to the cleanup code running
+// over garbage memory. We'll stick to using pthread_{set,get}specific here.
 #else
 #define TLS_SPECIFIER __thread
 #endif
