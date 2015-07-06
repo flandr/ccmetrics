@@ -223,8 +223,24 @@ private:
     pthread_key_t pthread_key_;
 };
 #else
-// Need to hook thread cleanup in DllMain
-static_assert(false, "Unimplemented nightmare town");
+class ThreadLocalStorageHandle {
+public:
+    ThreadLocalStorageHandle() { }
+    ~ThreadLocalStorageHandle() { }
+
+    ThreadLocalStorage* get() {
+        return &tls_;
+    }
+
+    static void threadExitCleanup() {
+        unregisterTlsHelper(&tls_);
+        // The TLS object is inaccessible at this point
+        tls_.destroyAll();
+    }
+private:
+    // Cleanup is handled by DllMain
+    static TLS_SPECIFIER ThreadLocalStorage tls_;
+};
 #endif
 
 // Helper class to implement a kind of zero-or-one reference counting.
