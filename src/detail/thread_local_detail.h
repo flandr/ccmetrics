@@ -227,14 +227,35 @@ private:
 static_assert(false, "Unimplemented nightmare town");
 #endif
 
+// Helper class to implement a kind of zero-or-one reference counting.
+// This class informs the wrapped object when it has destructed, allowing
+// it to enter a teardown mode while avoiding static destruction order issues
+// if handles are held by other static objects. An alternative appraoch to
+// this problem is to use std::shared_ptr, which can incur substantially more
+// reference counting overhead, depending on the object implementation.
+// See SharedStorage.
+template<typename T>
+class StaticDestructionGuard {
+public:
+    StaticDestructionGuard(T *t) : t_(t) { }
+    ~StaticDestructionGuard() {
+        t_->staticallyDestructed();
+    }
+    T& get() { return t_; }
+private:
+    T* t_;
+};
+
 // Global state for tracking all thread-specific storage
 class SharedStorage {
 public:
     static SharedStorage& singleton() {
-        // STATIC_DEFINE_ONCE(SharedStorage, singleton, SharedStorage());
-        // XXX fix windows -- needs move constructor for assignment above
-        static SharedStorage singleton;
-        return singleton;
+        // XXX Needs a fix for pre-VC14 Windows (use STATIC_DEFINE_ONCE),
+        // though implementation details of this library ensure that this
+        // is invoked in a single-threaded context on first use.
+        static SharedStorage *singleton = new SharedStorage();
+        static StaticDestructionGuard<SharedStorage> guard(singleton);
+        return *singleton;
     }
 
     /** @return a key into the thread-specific storage. */
@@ -299,9 +320,17 @@ public:
         auto& ss = singleton();
         std::lock_guard<std::mutex> lock(ss.mutex_);
         ss.removeThread(tls);
+        if (ss.destructed_ && ss.threadsEmpty()) {
+            // Last reference; we're the cleanup crew
+            delete &ss;
+        }
+    }
+
+    void staticallyDestructed() {
+        destructed_ = true;
     }
 private:
-    SharedStorage() : next_id_(0) {
+    SharedStorage() : next_id_(0), destructed_(false) {
         all_tls_head_.next_ = all_tls_head_.prev_ = &all_tls_head_;
     }
 
@@ -322,6 +351,10 @@ private:
         tls->next_ = tls->prev_ = nullptr;
     }
 
+    bool threadsEmpty() {
+        return all_tls_head_.next_ == &all_tls_head_;
+    }
+
     // Accessor for cross-platform local storage
     ThreadLocalStorageHandle tls_handle_;
 
@@ -329,6 +362,7 @@ private:
     std::mutex mutex_;
     std::vector<uint32_t> free_list_;
     uint32_t next_id_;
+    bool destructed_;
 
     // Threads that access TLS are registered here
     ThreadLocalStorage all_tls_head_;
