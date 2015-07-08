@@ -285,6 +285,9 @@ void HazardPointer<T, K>::scan() {
         std::swap(*iter, retire_list_.back());
         delete retire_list_.back();
         retire_list_.pop_back();
+        if (retire_list_.empty()) {
+            break;
+        }
     }
 }
 
