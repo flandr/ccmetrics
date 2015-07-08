@@ -15,6 +15,7 @@ set(ccmetrics_SHARED_LIBRARY
 # giant mega nightmare :(
 set(libccmetrics_SRCS
     detail/thread_local_detail.cc
+    detail/thread_local_win32.cc
     metric_registry.cc
     metrics/counter.cc
     metrics/exponential_reservoir.cc
@@ -32,8 +33,15 @@ include_directories(
     ${ccmetrics_PUBLIC_INCLUDE_DIRS}
 )
 
+# Exporting symbols
+add_definitions("-DEXPORTING")
+
 # Main library targets
 add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
+
+IF(WIN32)
+add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
+ENDIF (WIN32)
 
 # Apple frameworks
 #IF(APPLE)

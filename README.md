@@ -54,6 +54,20 @@ for (auto& entry : registry.timers()) {
 _Tip of the hat to [Coda Hale /
 Yammer](https://github.com/dropwizard/metrics)._
 
+## Supported platforms
+
+ccmetrics is known to work on the following platforms / compilers:
+
+ - Windows with Visual Studio 2013+ (dynamic linking only)
+ - Linux with GCC 4.8
+ - OS X 10.6+
+
+It _should_ build with any compiler that supports C++11 language features like
+`auto` type specification and `std::atomic` support. Platforms without a
+[pthreads](http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/pthread.h.html)
+implementation will likely need to port the TLS implementation in
+[thread_local_detail.h](src/detail/thread_local_detail.h).
+
 ## License
 
 Copyright © 2015 Nathan Rosenblum <flander@gmail.com>

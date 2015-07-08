@@ -23,6 +23,10 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#if defined(_WIN32)
+#define constexpr
+#endif
+
 namespace ccmetrics {
 
 namespace {

@@ -18,31 +18,17 @@
  * SOFTWARE.
  */
 
-#ifndef SRC_METRICS_CWG1778HACK_H_
-#define SRC_METRICS_CWG1778HACK_H_
-
-#include <chrono>
-#include <utility>
-
-namespace ccmetrics {
+#ifndef SRC_CCMETRICS_PORTING_H_
+#define SRC_CCMETRICS_PORTING_H_
 
 #if defined(_WIN32)
-#define noexcept
+#if defined(EXPORTING)
+#define CCMETRICS_SYM __declspec(dllexport)
+#else
+#define CCMETRICS_SYM __declspec(dllimport)
+#endif
+#else
+#define CCMETRICS_SYM
 #endif
 
-// Hack for storing time points in an atomic, for now. Everything is awful.
-// http://cplusplus.github.io/LWG/lwg-active.html#2165
-struct CWG1778Hack {
-    CWG1778Hack() noexcept { } // This is the hack.
-    decltype(std::chrono::steady_clock::now()) t;
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) &&t)
-        : t(std::move(t)) { }
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) const& t)
-        : t(t) { }
-};
-
-} // ccmetrics namespace
-
-#endif // SRC_METRICS_CWG1778HACK_H_
+#endif // SRC_CCMETRICS_PORTING_H_

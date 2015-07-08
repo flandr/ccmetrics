@@ -10,5 +10,8 @@ add_executable(example
 
 target_link_libraries(example
     ccmetrics
-    pthread
 )
+
+IF(NOT WIN32)
+    target_link_libraries(example pthread)
+ENDIF(NOT WIN32)

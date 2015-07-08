@@ -25,6 +25,7 @@
 #include <string>
 
 #include "ccmetrics/counter.h"
+#include "ccmetrics/porting.h"
 #include "ccmetrics/timer.h"
 
 namespace ccmetrics {
@@ -43,7 +44,8 @@ class MetricRegistryImpl;
  * to remove metrics other than by deleting the registry. It is up to the caller
  * to ensure that metric references are not used after registry deletion.
  */
-class MetricRegistry {
+
+class CCMETRICS_SYM MetricRegistry {
 public:
     MetricRegistry();
     ~MetricRegistry();

@@ -134,8 +134,7 @@ HazardPointer<T, K>* HazardPointers<T, K>::allocate() {
     do {
         oldhead = head_.load(std::memory_order_acquire);
         hp->next_ = oldhead;
-    } while (!head_.compare_exchange_strong(oldhead, hp,
-        std::memory_order_acq_rel));
+    } while (!head_.compare_exchange_strong(oldhead, hp));
     return hp;
 }
 
@@ -174,7 +173,7 @@ public:
 
     /** Set the hazardous reference `k`. */
     void setHazard(int k, T* value) {
-        assert(k < pointers.size());
+        assert(k < (int) pointers.size());
         pointers[k].store(value, std::memory_order_release);
     }
 
@@ -213,7 +212,7 @@ public:
 
     /** Clear the hazardous reference `k`. */
     void clearHazard(int k) {
-        assert(k < pointers.size());
+        assert(k < (int) pointers.size());
         pointers[k].store(nullptr, std::memory_order_release);
     }
 
@@ -282,10 +281,11 @@ void HazardPointer<T, K>::scan() {
             continue;
         }
         // Swap-and-delete vector cleanup idiom
+        bool done = (iter + 1 == retire_list_.end());
         std::swap(*iter, retire_list_.back());
         delete retire_list_.back();
         retire_list_.pop_back();
-        if (retire_list_.empty()) {
+        if (done) {
             break;
         }
     }

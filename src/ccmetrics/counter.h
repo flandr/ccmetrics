@@ -23,12 +23,14 @@
 
 #include <cinttypes>
 
+#include "ccmetrics/porting.h"
+
 namespace ccmetrics {
 
 class CounterImpl;
 
 /** An integral counter metric. */
-class Counter {
+class CCMETRICS_SYM Counter {
 public:
     Counter();
     ~Counter();

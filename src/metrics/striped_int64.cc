@@ -36,7 +36,7 @@ ThreadLocal<size_t, Striped64::NewHashCode> Striped64::thread_hash_code_{
     Striped64::NewHashCode()};
 
 size_t* Striped64::NewHashCode::operator()(void) const {
-    size_t* ret = new size_t(ThreadLocalRandom::current().next());
+    size_t* ret = new size_t(static_cast<size_t>(ThreadLocalRandom::current().next()));
     return ret;
 }
 
@@ -44,7 +44,7 @@ Striped64::~Striped64() {
     delete stripes_.load();
 }
 
-Striped64::Striped64(int k) : base_(0) {
+Striped64::Striped64(size_t k) : base_(0) {
     // Silly. But for testing only.
     Striped64_Storage *storage = new Striped64_Storage();
     while (storage->size() < k) {
@@ -73,7 +73,7 @@ int64_t Striped64::value() {
     } while(stripes_.load(std::memory_order_acquire) != cur);
 
     size_t cur_len = cur->size();
-    for (int i = 0; i < cur_len; ++i) {
+    for (size_t i = 0; i < cur_len; ++i) {
         ret += cur->get(i);
     }
 
@@ -90,7 +90,7 @@ void Striped64::reset() {
         return;
     }
     size_t cur_len = cur->size();
-    for (int i = 0; i < cur_len; ++i) {
+    for (size_t i = 0; i < cur_len; ++i) {
         cur->get(i).store(0, std::memory_order_release);
     }
     stripes_hazard_->clearHazard(0);

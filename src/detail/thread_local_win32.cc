@@ -18,31 +18,31 @@
  * SOFTWARE.
  */
 
-#ifndef SRC_METRICS_CWG1778HACK_H_
-#define SRC_METRICS_CWG1778HACK_H_
-
-#include <chrono>
-#include <utility>
-
-namespace ccmetrics {
-
 #if defined(_WIN32)
-#define noexcept
+
+#define NOMINMAX
+#include <windows.h>
+
+#include "detail/thread_local_detail.h"
+
+extern "C" {
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
+    switch (fdwReason) {
+    case DLL_THREAD_DETACH:
+        // Release thread local storage
+        ccmetrics::ThreadLocalStorageHandle::threadExitCleanup();
+        break;
+	case DLL_PROCESS_DETACH:
+		// Same?
+		ccmetrics::ThreadLocalStorageHandle::threadExitCleanup();
+		break;
+    default:
+		;
+    }
+    return TRUE;
+}
+
+}
+
 #endif
-
-// Hack for storing time points in an atomic, for now. Everything is awful.
-// http://cplusplus.github.io/LWG/lwg-active.html#2165
-struct CWG1778Hack {
-    CWG1778Hack() noexcept { } // This is the hack.
-    decltype(std::chrono::steady_clock::now()) t;
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) &&t)
-        : t(std::move(t)) { }
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) const& t)
-        : t(t) { }
-};
-
-} // ccmetrics namespace
-
-#endif // SRC_METRICS_CWG1778HACK_H_

@@ -71,8 +71,11 @@ struct CACHE_ALIGNED CacheAligned {
     T data;
     char pad[CACHE_LINE_SIZE > sizeof(T) ? CACHE_LINE_SIZE - sizeof(T) : 1];
 
+#if !defined(_WIN32)
+    // Causes an internal error on MSVC 2013!
     template<typename... U>
     CacheAligned(U&&... u) : data(std::forward<U>(u)...) { }
+#endif
 
     void* operator new(std::size_t size) {
         return allocateAligned(size, CACHE_LINE_SIZE);

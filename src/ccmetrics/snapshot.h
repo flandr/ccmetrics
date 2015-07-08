@@ -24,12 +24,15 @@
 #include <cinttypes>
 #include <vector>
 
+#include "ccmetrics/porting.h"
+
 namespace ccmetrics {
 
 /** A snapshot of a distribution. */
-class Snapshot {
+class CCMETRICS_SYM Snapshot {
 public:
     Snapshot(std::vector<int64_t> &&values, bool sorted);
+    ~Snapshot();
 
     /** @return the mean. */
     double mean() const;
@@ -39,16 +42,16 @@ public:
 
     /** @return the minimum value. */
     int64_t min() const {
-        if (!values_.empty()) {
-            return values_.front();
+        if (!values_->empty()) {
+            return values_->front();
         }
         return 0;
     }
 
     /** @return the maximum value. */
     int64_t max() const {
-        if (!values_.empty()) {
-            return values_.back();
+        if (!values_->empty()) {
+            return values_->back();
         }
         return 0;
     }
@@ -71,7 +74,7 @@ public:
     /** @return the valuue of the distribution at the quantile [0, 1] */
     double valueAt(double quantile) const;
 private:
-    std::vector<int64_t> values_;
+    std::vector<int64_t> *values_;
 };
 
 } // ccmetrics namespace

@@ -49,8 +49,25 @@ namespace ccmetrics {
 template<typename T>
 class ThreadLocalPointer {
 public:
+#if !defined(_WIN32)
     ThreadLocalPointer() : id_(SharedStorage::create()) { }
+#else
+    // There is a bug in VS 2013 that deadlocks the process when linking to
+    // a DLL that has static classes with initializers that aquire std::mutex.
+    // This is an implementation detail, unfortunately, that leaks up to
+    // this level; for Windows, we delay acquisition of the TLS slot id until
+    // first use, incurring an additional conditional evaluation on every
+    // access but allowing this library to be dynamically loaded.
+    // See http://connect.microsoft.com/VisualStudio/feedbackdetail/view/900741/deadlock-exception-using-std-mutex-in-static-class-instance-in-dll
+    ThreadLocalPointer() : id_(0) { }
+#endif
+
     ~ThreadLocalPointer() {
+#if defined(_WIN32)
+        if (!id_) {
+            return;
+        }
+#endif
         SharedStorage::destroy(id_);
     }
 
@@ -67,10 +84,20 @@ public:
     }
 
     void reset(T* ptr, void(*deleter)(void*) = nullptr) {
+#if defined(_WIN32)
+        if (!id_) {
+            id_ = SharedStorage::create();
+        }
+#endif
         SharedStorage::set(id_, ptr, deleter);
     }
 
     T* get() const {
+#if defined(_WIN32)
+        if (!id_) {
+            const_cast<uint32_t&>(id_) = SharedStorage::create();
+        }
+#endif
         return static_cast<T*>(SharedStorage::get(id_));
     }
 protected:
@@ -104,8 +131,10 @@ public:
         return *get();
     }
 
+#if !defined(_WIN32)
     ThreadLocal(ThreadLocal &&) = default;
     ThreadLocal& operator=(ThreadLocal &&) = default;
+#endif
     ThreadLocal(ThreadLocal const&) = delete;
     ThreadLocal& operator=(ThreadLocal const&) = delete;
 private:

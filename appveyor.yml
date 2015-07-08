@@ -1,0 +1,17 @@
+version: 0.1.{build}
+
+skip_tags: true
+
+configuration:
+  - Debug
+
+before_build:
+  - git submodule update --init --recursive
+  - cmake -H. -Bbuild
+
+build:
+  project: build\ccmetrics.cln
+  parallel: true
+
+test_script:
+  - cd build && set PATH=%PATH%;src\Debug && test\Debug\test.exe
