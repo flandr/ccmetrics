@@ -10,7 +10,7 @@ before_build:
   - cmake -H. -Bbuild
 
 build:
-  project: build\ccmetrics.cln
+  project: build\ccmetrics.sln
   parallel: true
 
 test_script:
