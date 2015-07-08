@@ -33,11 +33,11 @@ ELSE(WIN32)
     target_link_libraries(test ccmetrics)
 ENDIF(WIN32)
 
-IF(!WIN32)
+IF(NOT WIN32)
     target_link_libraries(test pthread)
-ENDIF(!WIN32)
+ENDIF(NOT WIN32)
 
-IF(!WIN32)
+IF(NOT WIN32)
 add_executable(bench
     bench.cc
 )
@@ -45,4 +45,4 @@ target_link_libraries(bench
     ccmetrics
     pthread
 )
-ENDIF(!WIN32)
+ENDIF(NOT WIN32)

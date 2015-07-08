@@ -12,6 +12,6 @@ target_link_libraries(example
     ccmetrics
 )
 
-IF(!WIN32)
+IF(NOT WIN32)
     target_link_libraries(example pthread)
-ENDIF(!WIN32)
+ENDIF(NOT WIN32)
