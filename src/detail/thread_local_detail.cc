@@ -26,6 +26,7 @@ namespace ccmetrics {
 #if defined(TLS_SPECIFIER)
 TLS_SPECIFIER ThreadLocalStorage ThreadLocalStorageHandle::tls_;
 #endif
+#else 
+TLS_SPECIFIER ThreadLocalStorage* ThreadLocalStorageHandle::tls_ = nullptr;
 #endif
-
 } // ccmetrics namespace

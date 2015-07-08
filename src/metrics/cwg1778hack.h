@@ -26,6 +26,10 @@
 
 namespace ccmetrics {
 
+#if defined(_WIN32)
+#define noexcept
+#endif
+
 // Hack for storing time points in an atomic, for now. Everything is awful.
 // http://cplusplus.github.io/LWG/lwg-active.html#2165
 struct CWG1778Hack {

@@ -46,4 +46,3 @@ target_link_libraries(bench
     pthread
 )
 ENDIF(!WIN32)
-

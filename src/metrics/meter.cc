@@ -49,7 +49,7 @@ void RateEWMA::tickIfNecessary() {
         return;
     }
 
-    int iters = delta_us.count() / (kInterval * 1E6);
+    int iters = delta_us.count() / (kInterval * 1E6L);
     for (int i = 0; i < iters; ++i) {
         // TODO: this could be done more efficiently (wrt atomic CAS) within
         // the tick method itself. Consider inlining.

@@ -53,16 +53,16 @@ public:
     Snapshot snapshot();
 private:
     // Decay factor
-    static constexpr double kAlpha = 0.015;
+    static const double kAlpha;
     // Number of elements in reservoir
-    static constexpr double kSize = 1028;
+    static const double kSize;
 
     struct Data {
         // Map from priority -> value, for maintaining ordered decaying weights
         ConcurrentSkipListMap<double, int64_t> map;
         // Map size
         std::atomic<size_t> count;
-        // Landmark for calculating weights
+        // Landmark for calculating weights 
         decltype(std::chrono::steady_clock::now()) landmark;
 
         explicit Data(decltype(landmark) time) : count(0), landmark(time) { }

@@ -35,40 +35,11 @@ ExponentialReservoir::ExponentialReservoir()
           next_scale_(CWG1778Hack(std::chrono::steady_clock::now() +
             std::chrono::hours(1))) { }
 
+const double ExponentialReservoir::kAlpha = 0.015;
+const double ExponentialReservoir::kSize = 1028;
+
 ExponentialReservoir::~ExponentialReservoir() {
     smr.hp->retireNode(data_.load());
-}
-
-// Implements Priority Sampling [1], ranking entries by w_i/u_i, where u_i
-// is drawn uniformly at random from (0, 1] and keeping only the top K entries.
-//
-// [1] N. Alon, et al. "Estimating sums of arbitrary selections with few
-// probes." In PODS, 2005.
-void ExponentialReservoir::update(int64_t value) {
-    auto now = std::chrono::steady_clock::now();
-
-    auto& hp = *smr.hp;
-    auto* data = loadAndRescaleIfNeeded(hp, now); // hp held
-    auto& values = data->map;
-
-    double delta = std::chrono::duration<double>(now - data->landmark).count();
-    double priority = std::exp(kAlpha * delta) /
-        (1.0 - ThreadLocalRandom::current().nextDouble());
-
-    if (data->count.fetch_add(1) < kSize) {
-        values.insert(priority, value);
-    } else {
-        auto first = values.firstKey();
-        if (first < priority && values.insert(priority, value)) {
-            // Remove an item (may be racy w/ concurrent removal of first)
-            // TODO: a specialized eraseFirst would be more efficient in CSLM
-            while (!values.erase(first)) {
-                first = values.firstKey();
-            }
-        }
-    }
-
-    hp.clearHazard(0);
 }
 
 Snapshot ExponentialReservoir::snapshot() {
@@ -84,7 +55,7 @@ Snapshot ExponentialReservoir::snapshot() {
 // XXX needs mock clock for testing :/
 template<typename TimePoint>
 ExponentialReservoir::Data* ExponentialReservoir::loadAndRescaleIfNeeded(
-        typename decltype(smr.hazards)::pointer_type& hp, TimePoint now) {
+        HazardPointers<Data>::pointer_type& hp, TimePoint now) {
     auto next = next_scale_.load(std::memory_order_acquire);
     if (now > next.t) {
         return rescale(hp, now, next);
@@ -92,9 +63,43 @@ ExponentialReservoir::Data* ExponentialReservoir::loadAndRescaleIfNeeded(
     return hp.loadAndSetHazard(data_, 0);
 }
 
+
+// Implements Priority Sampling [1], ranking entries by w_i/u_i, where u_i
+// is drawn uniformly at random from (0, 1] and keeping only the top K entries.
+//
+// [1] N. Alon, et al. "Estimating sums of arbitrary selections with few
+// probes." In PODS, 2005.
+void ExponentialReservoir::update(int64_t value) {
+	auto now = std::chrono::steady_clock::now();
+
+	auto& hp = *smr.hp;
+	auto* data = loadAndRescaleIfNeeded<decltype(now)>(hp, now); // hp held
+	auto& values = data->map;
+
+	double delta = std::chrono::duration<double>(now - data->landmark).count();
+	double priority = std::exp(kAlpha * delta) /
+		(1.0 - ThreadLocalRandom::current().nextDouble());
+
+	if (data->count.fetch_add(1) < kSize) {
+		values.insert(priority, value);
+	}
+	else {
+		auto first = values.firstKey();
+		if (first < priority && values.insert(priority, value)) {
+			// Remove an item (may be racy w/ concurrent removal of first)
+			// TODO: a specialized eraseFirst would be more efficient in CSLM
+			while (!values.erase(first)) {
+				first = values.firstKey();
+			}
+		}
+	}
+
+	hp.clearHazard(0);
+}
+
 template<typename TimePoint>
 ExponentialReservoir::Data* ExponentialReservoir::rescale(
-        typename decltype(smr.hazards)::pointer_type& hp, TimePoint now,
+        HazardPointers<Data>::pointer_type& hp, TimePoint now,
         CWG1778Hack next) {
     if (!next_scale_.compare_exchange_strong(next,
             CWG1778Hack(next.t + std::chrono::hours(1)))) {
@@ -125,7 +130,7 @@ ExponentialReservoir::Data* ExponentialReservoir::rescale(
     // Drop it
     hp.retireNode(data);
 
-    for (int i = 0; i < snap.size(); ++i) {
+    for (size_t i = 0; i < snap.size(); ++i) {
         // Rescale priorities in the snapshot
         snap[i].first *= std::exp(-kAlpha * delta);
     }

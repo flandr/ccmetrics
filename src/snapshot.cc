@@ -27,22 +27,26 @@
 namespace ccmetrics {
 
 Snapshot::Snapshot(std::vector<int64_t> &&values, bool sorted)
-        : values_(std::move(values)) {
+        : values_(new std::vector<int64_t>(std::move(values))) {
     if (!sorted) {
-        std::sort(values_.begin(), values_.end());
+        std::sort(values_->begin(), values_->end());
     }
 }
 
+Snapshot::~Snapshot() {
+    delete values_;
+}
+
 double Snapshot::mean() const {
-    if (values_.empty()) {
+    if (values_->empty()) {
         return 0;
     }
 
     int64_t sum = 0;
-    for (int64_t v : values_) {
+    for (int64_t v : *values_) {
         sum += v;
     }
-    return sum / static_cast<double>(values_.size());
+    return sum / static_cast<double>(values_->size());
 }
 
 double Snapshot::stdev() const {
@@ -50,7 +54,7 @@ double Snapshot::stdev() const {
     int n = 0;
     int64_t varsum = 0;
     double mean = 0.0;
-    for (int64_t value : values_) {
+    for (int64_t value : *values_) {
         ++n;
         double delta = value - mean;
         mean += delta / n;
@@ -70,22 +74,22 @@ double Snapshot::valueAt(double quantile) const {
         throw std::invalid_argument("quantile must be in [0, 1]");
     }
 
-    if (values_.empty()) {
+    if (values_->empty()) {
         return 0;
     }
 
     // Uses R-7 (default in R, and also in S), linear interpoloation of the
     // modes for the order statistics of U[0, 1].
-    double idx = quantile * (values_.size() + 1);
+    double idx = quantile * (values_->size() + 1);
 
     if (idx < 1) {
-        return values_[0];
-    } else if (idx >= values_.size()) {
-        return values_.back();
+        return (*values_)[0];
+    } else if (idx >= values_->size()) {
+        return values_->back();
     }
 
-    double x_h = values_[static_cast<int>(idx - 1)];
-    double x_hnext = values_[static_cast<int>(idx)];
+    double x_h = (*values_)[static_cast<int>(idx - 1)];
+    double x_hnext = (*values_)[static_cast<int>(idx)];
     return x_h + (idx - ::floor(idx)) * (x_hnext - x_h);
 }
 

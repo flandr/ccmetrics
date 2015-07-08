@@ -29,6 +29,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <system_error>
 #include <vector>
@@ -38,6 +39,10 @@
 namespace ccmetrics {
 
 class SharedStorage;
+
+#if defined(_WIN32)
+#define constexpr
+#endif
 
 // Multiplexer of thread-local storage & invasive list element.
 class ThreadLocalStorage {
@@ -71,7 +76,7 @@ public:
 
         assert(elements_[idx - 1].ptr == nullptr);
 
-        Element e = {ptr, deleter ? deleter : deletePtr<T>};
+        Element e = {ptr, deleter ? deleter : (void(*)(void*)) &deletePtr<T>};
         elements_[idx - 1] = e;
     }
 
@@ -229,17 +234,24 @@ public:
     ~ThreadLocalStorageHandle() { }
 
     ThreadLocalStorage* get() {
-        return &tls_;
+        if (tls_) {
+            return tls_;
+        }
+        tls_ = new ThreadLocalStorage();
+        return tls_;
     }
 
     static void threadExitCleanup() {
-        unregisterTlsHelper(&tls_);
-        // The TLS object is inaccessible at this point
-        tls_.destroyAll();
+        if (tls_) {
+            unregisterTlsHelper(tls_);
+            // The TLS object is inaccessible at this point
+            tls_->destroyAll();
+            delete tls_;
+        }
     }
 private:
     // Cleanup is handled by DllMain
-    static TLS_SPECIFIER ThreadLocalStorage tls_;
+    static TLS_SPECIFIER ThreadLocalStorage *tls_;
 };
 #endif
 

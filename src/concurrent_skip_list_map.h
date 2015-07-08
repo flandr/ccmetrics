@@ -109,6 +109,11 @@ private:
         HazardPointers<Node, 4> hazards;
         ThreadLocal<typename HazardPointers<Node, 4>::pointer_type,
             NewHPFunctor> hp;
+
+        // MSVC 2013 can't handle the initialization forms that would be
+        // required to do this w/o an explicit constructor :(
+        SMR() : hp(NewHPFunctor(), &retireHazard) { }
+
     } smr_;
     static void retireHazard(void *h) {
         smr_.hazards.retire(reinterpret_cast<
@@ -159,9 +164,7 @@ private:
 
 template<typename Key, typename Value>
 typename ConcurrentSkipListMap<Key, Value>::SMR
-ConcurrentSkipListMap<Key, Value>::smr_{{},
-    {ConcurrentSkipListMap<Key, Value>::NewHPFunctor(),
-     ConcurrentSkipListMap<Key, Value>::retireHazard}};
+ConcurrentSkipListMap<Key, Value>::smr_;
 
 template<typename Key, typename Value>
 typename ConcurrentSkipListMap<Key, Value>::Node*

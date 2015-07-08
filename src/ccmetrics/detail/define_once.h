@@ -21,7 +21,10 @@
 #ifndef SRC_DETAIL_DEFINE_ONCE_H_
 #define SRC_DETAIL_DEFINE_ONCE_H_
 
-namespace ccmetrics {
+#if defined(_WIN32)
+#define NOMINMAX
+#include <windows.h>
+#endif
 
 // Preprocessor hackery for anonymous variables
 #define PASTE_IMPL(x, y) x ## y
@@ -46,7 +49,7 @@ enum { uninitialized = 0, initializing, initialized };
 
 #define STATIC_DEFINE_ONCE(type, var, stmt)                     \
     static type var;                                            \
-    static int ANON_VAR(state);                                 \
+    static long ANON_VAR(state);                                \
     bool ANON_VAR(cont) = true;                                 \
     while (ANON_VAR(cont)) {                                    \
         switch (InterlockedCompareExchange(&ANON_VAR(state),    \
@@ -64,7 +67,5 @@ enum { uninitialized = 0, initializing, initialized };
         }                                                       \
     } do { } while (0)
 #endif
-
-} // ccmetrics namespace
 
 #endif // endif SRC_DETAIL_DEFINE_ONCE_H_

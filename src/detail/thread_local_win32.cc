@@ -20,6 +20,7 @@
 
 #if defined(_WIN32)
 
+#define NOMINMAX
 #include <windows.h>
 
 #include "detail/thread_local_detail.h"
@@ -27,12 +28,17 @@
 extern "C" {
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
-    switch (fwdReason) {
+    switch (fdwReason) {
     case DLL_THREAD_DETACH:
         // Release thread local storage
-        ThreadLocalStorageHandle::threadExitCleanup();
+        ccmetrics::ThreadLocalStorageHandle::threadExitCleanup();
         break;
+	case DLL_PROCESS_DETACH:
+		// Same?
+		ccmetrics::ThreadLocalStorageHandle::threadExitCleanup();
+		break;
     default:
+		;
     }
     return TRUE;
 }

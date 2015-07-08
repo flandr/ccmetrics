@@ -51,7 +51,7 @@ public:
 
     Striped64() : base_(0), stripes_(nullptr) { }
     // Basically just for testing
-    explicit Striped64(int k);
+    explicit Striped64(size_t k);
     ~Striped64();
 
     /** @return the current value, with consistency caveats as above. */

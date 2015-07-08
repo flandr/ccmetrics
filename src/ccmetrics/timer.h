@@ -24,6 +24,7 @@
 #include <cinttypes>
 #include <chrono>
 
+#include "ccmetrics/porting.h"
 #include "ccmetrics/snapshot.h"
 
 namespace ccmetrics {
@@ -34,7 +35,7 @@ class TimerImpl;
  * A timer metric that reports aggregate statistics of recorded event durations
  * and throughput estimates.
  */
-class Timer {
+class CCMETRICS_SYM Timer {
 public:
     Timer();
     ~Timer();
