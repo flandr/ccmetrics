@@ -24,17 +24,26 @@ add_executable(test
 )
 
 target_link_libraries(test
-    ccmetrics
     gtest
-    pthread
 )
 
+IF(WIN32)
+    target_link_libraries(test ccmetrics_s)
+ELSE(WIN32)
+    target_link_libraries(test ccmetrics)
+ENDIF(WIN32)
+
+IF(!WIN32)
+    target_link_libraries(test pthread)
+ENDIF(!WIN32)
+
+IF(!WIN32)
 add_executable(bench
     bench.cc
 )
-
 target_link_libraries(bench
     ccmetrics
-    gtest
     pthread
 )
+ENDIF(!WIN32)
+
