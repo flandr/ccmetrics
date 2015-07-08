@@ -62,7 +62,7 @@ private:
         ConcurrentSkipListMap<double, int64_t> map;
         // Map size
         std::atomic<size_t> count;
-        // Landmark for calculating weights 
+        // Landmark for calculating weights
         decltype(std::chrono::steady_clock::now()) landmark;
 
         explicit Data(decltype(landmark) time) : count(0), landmark(time) { }
@@ -70,7 +70,7 @@ private:
 
     // XXX this is starting to feel like onerous boilerplate...
     struct NewHPFunctor {
-        typename HazardPointers<Data>::pointer_type* operator()(void) const {
+        HazardPointers<Data>::pointer_type* operator()(void) const {
             return smr.hazards.allocate();
         }
     };
@@ -79,8 +79,8 @@ private:
         ThreadLocal<typename decltype(hazards)::pointer_type, NewHPFunctor> hp;
     } smr;
     static void retireHazard(void *h) {
-        smr.hazards.retire(reinterpret_cast<
-            typename decltype(smr.hazards)::pointer_type*>(h));
+        smr.hazards.retire(
+            reinterpret_cast<decltype(smr.hazards)::pointer_type*>(h));
     }
 
     std::atomic<Data*> data_;
@@ -93,10 +93,10 @@ private:
     std::mutex rescale_snap_mutex_;
 
     template<typename TimePoint>
-    Data* loadAndRescaleIfNeeded(typename decltype(smr.hazards)::pointer_type&,
-        TimePoint now);
+    Data* loadAndRescaleIfNeeded(
+        typename HazardPointers<Data>::pointer_type& bar, TimePoint now);
     template<typename TimePoint>
-    Data* rescale(typename decltype(smr.hazards)::pointer_type&, TimePoint now,
+    Data* rescale(typename HazardPointers<Data>::pointer_type&, TimePoint now,
         CWG1778Hack next);
 };
 
