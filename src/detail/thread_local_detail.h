@@ -124,7 +124,7 @@ private:
         // Use an expansion factor < 2, which allows for eventual use of
         // previously allocated blocks by the allocator; see some discussion
         // at http://stackoverflow.com/questions/5232198/about-vectors-growth.
-        size_t new_size = size * 1.5;
+        size_t new_size = static_cast<size_t>(1 + size * 1.5);
 
         Element *next = new Element[new_size];
         memset(next, 0, new_size * sizeof(Element));
