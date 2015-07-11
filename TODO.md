@@ -2,7 +2,6 @@
 
 Basic necessities
 
- - Windows thread storage implementation
  - Fix Windows statics
 
 ## Reporting
