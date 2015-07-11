@@ -24,12 +24,13 @@
 #include <chrono>
 
 #include "ccmetrics/metric_registry.h"
+#include "ccmetrics/porting.h"
 
 namespace ccmetrics {
 
 class PeriodicReporterImpl;
 
-class PeriodicReporter {
+class CCMETRICS_SYM PeriodicReporter {
 public:
     PeriodicReporter();
     virtual ~PeriodicReporter();
@@ -52,7 +53,7 @@ private:
 };
 
 /** @return a new periodic reporter that sends reports to stdout. */
-PeriodicReporter* mkConsoleReporter(MetricRegistry *registry);
+CCMETRICS_SYM PeriodicReporter* mkConsoleReporter(MetricRegistry *registry);
 
 } // ccmetrics namespace
 
