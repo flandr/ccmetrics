@@ -24,7 +24,9 @@ include(External_gtest)
 include(External_rapidjson)
 
 # Use C++11 when building C++ code
+if (NOT WIN32)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif (NOT WIN32)
 
 # Apple needs modern C++ libraries
 IF(APPLE)
