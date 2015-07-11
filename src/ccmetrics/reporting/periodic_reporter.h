@@ -23,6 +23,8 @@
 
 #include <chrono>
 
+#include "ccmetrics/metric_registry.h"
+
 namespace ccmetrics {
 
 class PeriodicReporterImpl;
@@ -48,6 +50,9 @@ private:
 
     PeriodicReporterImpl *impl_;
 };
+
+/** @return a new periodic reporter that sends reports to stdout. */
+PeriodicReporter* mkConsoleReporter(MetricRegistry *registry);
 
 } // ccmetrics namespace
 

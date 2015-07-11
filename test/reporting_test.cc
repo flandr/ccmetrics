@@ -20,8 +20,11 @@
 
 #include <gtest/gtest.h>
 
+#include <random>
+#include <memory>
 #include <thread>
 
+#include "ccmetrics/metric_registry.h"
 #include "ccmetrics/reporting/periodic_reporter.h"
 
 namespace ccmetrics {
@@ -45,6 +48,24 @@ TEST(ReportingTest, BasicFunctionality) {
     // Just assert >= 2; no matter what this is a racy test
     reporter.stop();
     ASSERT_GT(reporter.invocations, 1);
+}
+
+TEST(ReportingTest, ConsoleReporterSmokeTest) {
+    MetricRegistry registry;
+    std::unique_ptr<PeriodicReporter> reporter(mkConsoleReporter(&registry));
+    reporter->report();
+
+    auto counter = registry.counter("foo_counter");
+    counter->update(7);
+
+    std::minstd_rand gen;
+    std::uniform_int_distribution<int> dist(0, 1000);
+    auto timer = registry.timer("bar_timer");
+    for (int i = 0; i < 1E5; ++i) {
+        timer->update(dist(gen));
+    }
+
+    reporter->report();
 }
 
 } // test namespace
