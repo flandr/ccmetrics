@@ -39,8 +39,12 @@ add_definitions("-DEXPORTING")
 # Main library targets
 add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
 
+# Depend on rapidjson headers
+add_dependencies(${ccmetrics_SHARED_LIBRARY} rapidjson_ext)
+
 IF(WIN32)
 add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
+add_dependencies(ccmetrics_s rapidjson_ext)
 ENDIF (WIN32)
 
 # Apple frameworks
