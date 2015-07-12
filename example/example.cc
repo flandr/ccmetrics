@@ -28,8 +28,9 @@
 #include <thread>
 
 #include "ccmetrics/counter.h"
-#include "ccmetrics/metric_registry.h"
 #include "ccmetrics/detail/define_once.h"
+#include "ccmetrics/metric_registry.h"
+#include "ccmetrics/reporting/periodic_reporter.h"
 
 ccmetrics::MetricRegistry& registry() {
     // XXX If you're on MSVC < VS 2013 you need better statics. Better
@@ -66,17 +67,9 @@ int main(int argc, char **argv) {
     foo(iters);
     bar(iters);
     slow(iters);
-    printf("Counters:\n");
-    for (auto& entry : registry().counters()) {
-        printf("%-20s %8" PRId64"\n", entry.first.c_str(),
-            entry.second->value());
-    }
-    printf("Timers:\n");
-    for (auto& entry : registry().timers()) {
-        auto* timer = entry.second;
-        printf("%-20s %8" PRId64" %8f %8f %8f\n", entry.first.c_str(),
-               timer->count(), timer->oneMinuteRate(),
-               timer->fiveMinuteRate(),
-               timer->fifteenMinuteRate());
-    }
+
+    ccmetrics::PeriodicReporter *reporter =
+        ccmetrics::mkConsoleReporter(&registry());
+    reporter->report();
+    return 0;
 }
