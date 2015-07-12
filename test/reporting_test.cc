@@ -25,18 +25,15 @@
 #include <thread>
 
 #include "ccmetrics/metric_registry.h"
+#include "ccmetrics/porting.h"
 #include "ccmetrics/reporting/periodic_reporter.h"
-
-#if defined(_WIN32)
-#define noexcept
-#endif
 
 namespace ccmetrics {
 namespace test {
 
 class TestReporter final : public PeriodicReporter {
 public:
-    void report() noexcept {
+    void report() NOEXCEPT {
         ++invocations;
     }
     int invocations = 0;

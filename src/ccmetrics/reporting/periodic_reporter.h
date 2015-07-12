@@ -45,7 +45,7 @@ public:
     void stop();
 
     /** Implementation-specific report method. */
-    virtual void report() noexcept = 0;
+    virtual void report() NOEXCEPT = 0;
 private:
     void doStart(std::chrono::milliseconds const& period);
 

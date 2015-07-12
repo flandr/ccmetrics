@@ -28,18 +28,15 @@
 #include <sstream>
 
 #include "ccmetrics/metric_registry.h"
+#include "ccmetrics/porting.h"
 #include "ccmetrics/reporting/periodic_reporter.h"
-
-#if defined(_WIN32)
-#define noexcept
-#endif
 
 namespace ccmetrics {
 
 class ConsoleReporter : public PeriodicReporter {
 public:
     explicit ConsoleReporter(MetricRegistry *registry) : registry_(registry) { }
-    void report() noexcept;
+    void report() NOEXCEPT;
 
     static const int kKeyWidth = 20;
 private:
@@ -82,7 +79,7 @@ static std::string formatNow() {
 #endif
 }
 
-void ConsoleReporter::report() noexcept {
+void ConsoleReporter::report() NOEXCEPT {
     printWithBanner(formatNow(), '=');
     printf("\n");
 

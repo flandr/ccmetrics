@@ -24,16 +24,14 @@
 #include <chrono>
 #include <utility>
 
-namespace ccmetrics {
+#include "ccmetrics/porting.h"
 
-#if defined(_WIN32)
-#define noexcept
-#endif
+namespace ccmetrics {
 
 // Hack for storing time points in an atomic, for now. Everything is awful.
 // http://cplusplus.github.io/LWG/lwg-active.html#2165
 struct CWG1778Hack {
-    CWG1778Hack() noexcept { } // This is the hack.
+    CWG1778Hack() NOEXCEPT { } // This is the hack.
     decltype(std::chrono::steady_clock::now()) t;
     explicit CWG1778Hack(
         decltype(std::chrono::steady_clock::now()) &&t)
