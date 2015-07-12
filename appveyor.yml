@@ -5,9 +5,12 @@ skip_tags: true
 configuration:
   - Debug
 
+install:
+  - SET PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;%PATH%
+
 before_build:
   - git submodule update --init --recursive
-  - cmake -H. -Bbuild
+  - cmake -G "Visual Studio 12" -H. -Bbuild
 
 build:
   project: build\ccmetrics.sln
