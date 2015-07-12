@@ -33,7 +33,7 @@
 
 namespace ccmetrics {
 
-class ConsoleReporter : public PeriodicReporter {
+class CCMETRICS_SYM ConsoleReporter : public PeriodicReporter {
 public:
     explicit ConsoleReporter(MetricRegistry *registry) : registry_(registry) { }
     void report() NOEXCEPT;
