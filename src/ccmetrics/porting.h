@@ -31,4 +31,12 @@
 #define CCMETRICS_SYM
 #endif
 
+
+// MSVC does not implement the noexcept keyword
+#if defined(_WIN32)
+#define NOEXCEPT
+#else
+#define NOEXCEPT noexcept
+#endif
+
 #endif // SRC_CCMETRICS_PORTING_H_

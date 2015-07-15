@@ -18,58 +18,56 @@
  * SOFTWARE.
  */
 
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
+#include <gtest/gtest.h>
 
-#include <stdlib.h>
-#include <inttypes.h>
-
+#include <random>
+#include <memory>
 #include <thread>
 
-#include "ccmetrics/counter.h"
-#include "ccmetrics/detail/define_once.h"
 #include "ccmetrics/metric_registry.h"
+#include "ccmetrics/porting.h"
 #include "ccmetrics/reporting/periodic_reporter.h"
 
-ccmetrics::MetricRegistry& registry() {
-    // XXX If you're on MSVC < VS 2013 you need better statics. Better
-    // statics coming, I promise.
-    static ccmetrics::MetricRegistry singleton;
-    return singleton;
+namespace ccmetrics {
+namespace test {
+
+class TestReporter final : public PeriodicReporter {
+public:
+    void report() NOEXCEPT {
+        ++invocations;
+    }
+    int invocations = 0;
+};
+
+TEST(ReportingTest, BasicFunctionality) {
+    TestReporter reporter;
+    reporter.report();
+    ASSERT_EQ(1, reporter.invocations);
+
+    reporter.start(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    // Just assert >= 2; no matter what this is a racy test
+    reporter.stop();
+    ASSERT_GT(reporter.invocations, 1);
 }
 
-void foo(int iters) {
-    for (int i = 0; i < iters; ++i) {
-        INCREMENT_COUNTER("foo", registry());
-    }
-}
-
-void bar(int iters) {
-    for (int i = 0; i < iters; ++i) {
-        INCREMENT_COUNTER("bar", registry());
-    }
-}
-
-void slow(int iters) {
-    SCOPED_TIMER("slow", registry());
-    for (int i = 0; i < iters; ++i) {
-        SCOPED_TIMER("fast", registry());
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    }
-}
-
-int main(int argc, char **argv) {
-    int iters = 1000;
-    if (argc == 2) {
-        iters = atoi(argv[1]);
-    }
-    foo(iters);
-    bar(iters);
-    slow(iters);
-
-    ccmetrics::PeriodicReporter *reporter =
-        ccmetrics::mkConsoleReporter(&registry());
+TEST(ReportingTest, ConsoleReporterSmokeTest) {
+    MetricRegistry registry;
+    std::unique_ptr<PeriodicReporter> reporter(mkConsoleReporter(&registry));
     reporter->report();
-    return 0;
+
+    auto counter = registry.counter("foo_counter");
+    counter->update(7);
+
+    std::minstd_rand gen;
+    std::uniform_int_distribution<int> dist(0, 1000);
+    auto timer = registry.timer("bar_timer");
+    for (int i = 0; i < 1E5; ++i) {
+        timer->update(dist(gen));
+    }
+
+    reporter->report();
 }
+
+} // test namespace
+} // ccmetrics namespace

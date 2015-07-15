@@ -18,29 +18,43 @@
  * SOFTWARE.
  */
 
-#ifndef SRC_METRICS_CWG1778HACK_H_
-#define SRC_METRICS_CWG1778HACK_H_
+#ifndef SRC_CCMETRICS_REPORTING_PERIODIC_REPORTER_H_
+#define SRC_CCMETRICS_REPORTING_PERIODIC_REPORTER_H_
 
 #include <chrono>
-#include <utility>
 
+#include "ccmetrics/metric_registry.h"
 #include "ccmetrics/porting.h"
 
 namespace ccmetrics {
 
-// Hack for storing time points in an atomic, for now. Everything is awful.
-// http://cplusplus.github.io/LWG/lwg-active.html#2165
-struct CWG1778Hack {
-    CWG1778Hack() NOEXCEPT { } // This is the hack.
-    decltype(std::chrono::steady_clock::now()) t;
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) &&t)
-        : t(std::move(t)) { }
-    explicit CWG1778Hack(
-        decltype(std::chrono::steady_clock::now()) const& t)
-        : t(t) { }
+class PeriodicReporterImpl;
+
+class CCMETRICS_SYM PeriodicReporter {
+public:
+    PeriodicReporter();
+    virtual ~PeriodicReporter();
+
+    /** Start reporting. */
+    template<typename Rep, typename Period>
+    void start(std::chrono::duration<Rep, Period> const& period) {
+        doStart(std::chrono::milliseconds(period));
+    }
+
+    /** Stop reporting. */
+    void stop();
+
+    /** Implementation-specific report method. */
+    virtual void report() NOEXCEPT = 0;
+private:
+    void doStart(std::chrono::milliseconds const& period);
+
+    PeriodicReporterImpl *impl_;
 };
+
+/** @return a new periodic reporter that sends reports to stdout. */
+CCMETRICS_SYM PeriodicReporter* mkConsoleReporter(MetricRegistry *registry);
 
 } // ccmetrics namespace
 
-#endif // SRC_METRICS_CWG1778HACK_H_
+#endif // SRC_CCMETRICS_REPORTING_PERIODIC_REPORTER_H_
