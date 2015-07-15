@@ -7,6 +7,11 @@ include_directories(
     ${gtest_INCLUDE_DIRS}
 )
 
+IF(WIN32)
+    # Linking statically; pretend we're exporting
+    add_definitions("-DEXPORTING")
+ENDIF(WIN32)
+
 add_executable(test
     concurrent_skip_list_map_test.cc
     driver.cc
