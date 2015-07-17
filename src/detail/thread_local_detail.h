@@ -258,7 +258,7 @@ private:
 // Helper class to implement a kind of zero-or-one reference counting.
 // This class informs the wrapped object when it has destructed, allowing
 // it to enter a teardown mode while avoiding static destruction order issues
-// if handles are held by other static objects. An alternative appraoch to
+// if handles are held by other static objects. An alternative approach to
 // this problem is to use std::shared_ptr, which can incur substantially more
 // reference counting overhead, depending on the object implementation.
 // See SharedStorage.
