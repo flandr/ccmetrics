@@ -69,13 +69,6 @@ public:
 
     /** @return a weakly consitent snapshot of entries in the map. */
     std::vector<std::pair<Key, Value>> entries();
-
-    void printLevel(int i) {
-        Node *n = head_->next_[i];
-        while (n) {
-            n = n->next_[i];
-        }
-    }
 private:
     static const int kMaxHeight = 12; // XXX explain choice of max height
 
