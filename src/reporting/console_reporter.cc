@@ -135,8 +135,10 @@ void ConsoleReporter::printWithBanner(std::string const& str, char sym) {
         std::string(kConsoleWidth - str.size(), sym).c_str());
 }
 
-PeriodicReporter* mkConsoleReporter(MetricRegistry *registry) {
-    return new ConsoleReporter(registry);
+std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
+mkConsoleReporter(MetricRegistry *registry) {
+    return std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>(
+        new ConsoleReporter(registry), PeriodicReporter::Deleter());
 }
 
 } // ccmetrics namespace

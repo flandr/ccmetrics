@@ -87,4 +87,8 @@ void PeriodicReporter::stop() {
     impl_->stop();
 }
 
+void PeriodicReporter::Deleter::operator()(PeriodicReporter *reporter) {
+    delete reporter;
+}
+
 } // ccmetrics namespace
