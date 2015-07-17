@@ -60,7 +60,7 @@ ccmetrics is known to work on the following platforms / compilers:
 
  - Windows with Visual Studio 2013+ (dynamic linking only)
  - Linux with GCC 4.8
- - OS X 10.6+
+ - OS X 10.6+ with Xcode 6.2+
 
 It _should_ build with any compiler that supports C++11 language features like
 `auto` type specification and `std::atomic` support. Platforms without a
