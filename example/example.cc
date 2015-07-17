@@ -68,8 +68,7 @@ int main(int argc, char **argv) {
     bar(iters);
     slow(iters);
 
-    ccmetrics::PeriodicReporter *reporter =
-        ccmetrics::mkConsoleReporter(&registry());
+    auto reporter = ccmetrics::mkConsoleReporter(&registry());
     reporter->report();
     return 0;
 }

@@ -53,7 +53,7 @@ TEST(ReportingTest, BasicFunctionality) {
 
 TEST(ReportingTest, ConsoleReporterSmokeTest) {
     MetricRegistry registry;
-    std::unique_ptr<PeriodicReporter> reporter(mkConsoleReporter(&registry));
+    auto reporter = mkConsoleReporter(&registry);
     reporter->report();
 
     auto counter = registry.counter("foo_counter");

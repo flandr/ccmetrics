@@ -22,6 +22,7 @@
 #define SRC_CCMETRICS_REPORTING_PERIODIC_REPORTER_H_
 
 #include <chrono>
+#include <memory>
 
 #include "ccmetrics/metric_registry.h"
 #include "ccmetrics/porting.h"
@@ -46,6 +47,12 @@ public:
 
     /** Implementation-specific report method. */
     virtual void report() NOEXCEPT = 0;
+
+    // Ensures safe deletion of objects produced in a dll on Windows
+    class CCMETRICS_SYM Deleter {
+    public:
+        void operator()(PeriodicReporter *pr);
+    };
 private:
     void doStart(std::chrono::milliseconds const& period);
 
@@ -53,7 +60,8 @@ private:
 };
 
 /** @return a new periodic reporter that sends reports to stdout. */
-CCMETRICS_SYM PeriodicReporter* mkConsoleReporter(MetricRegistry *registry);
+CCMETRICS_SYM std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
+mkConsoleReporter(MetricRegistry *registry);
 
 } // ccmetrics namespace
 
