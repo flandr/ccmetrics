@@ -20,6 +20,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 # Add third-party dependencies
 include(ExternalProject)
+include(External_cppformat)
 include(External_rapidjson)
 include(External_wte)
 

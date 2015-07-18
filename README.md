@@ -83,4 +83,5 @@ of its interfaces to that project.
 ccmetrics uses several other open-source libraries:
 
  - [RapidJSON](https://github.com/miloyip/rapidjson) for JSON serialization
+ - [cppformat](http://cppformat.github.io/) for general formatting
  - [Google Test](https://code.google.com/p/googletest) for unit tests
