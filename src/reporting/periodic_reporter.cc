@@ -28,6 +28,7 @@
 #include "wte/event_base.h"
 #include "wte/porting.h"
 #include "wte/timeout.h"
+#include "reporting/util.h"
 
 namespace ccmetrics {
 
@@ -95,6 +96,8 @@ private:
 
     bool running_;
     std::thread loop_;
+
+    friend wte::EventBase* getReporterBase(PeriodicReporterImpl *);
 };
 
 PeriodicReporter::PeriodicReporter() : impl_(new PeriodicReporterImpl(this)) { }
@@ -113,6 +116,10 @@ void PeriodicReporter::stop() {
 
 void PeriodicReporter::Deleter::operator()(PeriodicReporter *reporter) {
     delete reporter;
+}
+
+wte::EventBase* getReporterBase(PeriodicReporterImpl *reporter) {
+    return reporter->base_;
 }
 
 } // ccmetrics namespace

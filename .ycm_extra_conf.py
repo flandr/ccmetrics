@@ -9,6 +9,7 @@ def _getIncludes():
     build = "./build"
     includes = [os.path.join(ext, "gtest", "include"),
             os.path.join(build, "rapidjson", "include"),
+            os.path.join(build, "cppformat", "include"),
             os.path.join(build, "wte", "include"),
             os.path.join("src")]
     return ["-I" + x for x in includes]

@@ -53,15 +53,18 @@ public:
     public:
         void operator()(PeriodicReporter *pr);
     };
+protected:
+    PeriodicReporterImpl *impl_;
 private:
     void doStart(std::chrono::milliseconds const& period);
-
-    PeriodicReporterImpl *impl_;
 };
 
 /** @return a new periodic reporter that sends reports to stdout. */
 CCMETRICS_SYM std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
 mkConsoleReporter(const MetricRegistry *registry);
+
+CCMETRICS_SYM std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
+mkGraphiteReporter(MetricRegistry *registry, std::string const& ip, int16_t port);
 
 } // ccmetrics namespace
 

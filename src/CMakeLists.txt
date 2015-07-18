@@ -24,6 +24,7 @@ set(libccmetrics_SRCS
     metrics/striped_int64.cc
     metrics/timer.cc
     reporting/console_reporter.cc
+    reporting/graphite_reporter.cc
     reporting/periodic_reporter.cc
     serializing/json_serializer.cc
     snapshot.cc
@@ -51,6 +52,7 @@ ENDIF (WIN32)
 
 # Link dependencies
 target_link_libraries(${ccmetrics_SHARED_LIBRARY}
+    format
     wte
     ${EXTRA_LIBS}
 )
