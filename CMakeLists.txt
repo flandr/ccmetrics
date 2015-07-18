@@ -21,6 +21,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # Add third-party dependencies
 include(ExternalProject)
 include(External_rapidjson)
+include(External_wte)
 
 # Use C++11 when building C++ code
 if (NOT WIN32)

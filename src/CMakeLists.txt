@@ -51,7 +51,8 @@ ENDIF (WIN32)
 
 # Link dependencies
 target_link_libraries(${ccmetrics_SHARED_LIBRARY}
-${EXTRA_LIBS}
+    wte
+    ${EXTRA_LIBS}
 )
 
 # Installation
