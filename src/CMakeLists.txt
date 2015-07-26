@@ -45,9 +45,15 @@ add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
 # Depend on rapidjson headers
 add_dependencies(${ccmetrics_SHARED_LIBRARY} rapidjson_ext)
 
+# Seems like we shouldn't have to do this explicitly :/
+add_dependencies(${ccmetrics_SHARED_LIBRARY} cppformat_ext)
+add_dependencies(${ccmetrics_SHARED_LIBRARY} wte_ext)
+
 IF(WIN32)
     add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
     add_dependencies(ccmetrics_s rapidjson_ext)
+    add_dependencies(ccmetrics_s cppformat_ext)
+    add_dependencies(ccmetrics_s wte_ext)
 ENDIF (WIN32)
 
 # Link dependencies
