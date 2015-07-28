@@ -19,6 +19,7 @@
  */
 
 #include <cinttypes>
+#include <ctime>
 
 #include "format.h"
 
