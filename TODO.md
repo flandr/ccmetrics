@@ -7,7 +7,7 @@ Basic necessities
 ## Reporting
 
  - collectd reporting
- - graphite reporting
+ - native influxdb reporting
 
 # Improvements
 
