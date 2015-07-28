@@ -54,6 +54,8 @@ IF(WIN32)
     add_dependencies(ccmetrics_s rapidjson_ext)
     add_dependencies(ccmetrics_s cppformat_ext)
     add_dependencies(ccmetrics_s wte_ext)
+    # We can combine the static libraries by passing them to the linker
+    set_target_properties(ccmetrics_s PROPERTIES STATIC_LIBRARY_FLAGS ${wte_STATIC_PATH})
 ENDIF (WIN32)
 
 # Link dependencies

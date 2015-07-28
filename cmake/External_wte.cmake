@@ -8,3 +8,7 @@ ExternalProject_Add(wte_ext
 ExternalProject_Get_Property(wte_ext install_dir)
 include_directories(${install_dir}/include)
 link_directories(${install_dir}/lib)
+
+if(WIN32)
+    set(wte_STATIC_PATH ${install_dir}/lib/wte_s.lib)
+endif(WIN32)
