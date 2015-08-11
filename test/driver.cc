@@ -20,7 +20,22 @@
 
 #include <gtest/gtest.h>
 
+#if !defined(_WIN32)
+#include <signal.h>
+#else
+#include <winsock2.h>
+#endif
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+
+#if !defined(_WIN32)
+    signal(SIGPIPE, SIG_IGN);
+#else
+    WORD version = MAKEWORD(2, 2);
+    WSADATA data;
+    WSAStartup(version, &data);
+#endif
+
     return RUN_ALL_TESTS();
 }

@@ -25,6 +25,6 @@ namespace ccmetrics {
 class PeriodicReporterImpl;
 
 /** @return the internal implementation's event base. */
-wte::EventBase* getReporterBase(PeriodicReporterImpl *reporter);
+std::shared_ptr<wte::EventBase> getReporterBase(PeriodicReporterImpl *reporter);
 
 } // ccmetrics namespace

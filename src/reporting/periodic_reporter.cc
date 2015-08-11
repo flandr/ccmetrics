@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <thread>
 
@@ -37,9 +38,7 @@ public:
     PeriodicReporterImpl(PeriodicReporter *reporter)
         : reporter_(reporter), base_(wte::mkEventBase()), timeout_(this),
           running_(false) { }
-    ~PeriodicReporterImpl() {
-        delete base_;
-    }
+    ~PeriodicReporterImpl() { }
 
     class ReporterTimeout final : public wte::Timeout {
     public:
@@ -91,13 +90,14 @@ public:
     }
 private:
     PeriodicReporter *reporter_;
-    wte::EventBase *base_;
+    std::shared_ptr<wte::EventBase> base_;
     ReporterTimeout timeout_;
 
     bool running_;
     std::thread loop_;
 
-    friend wte::EventBase* getReporterBase(PeriodicReporterImpl *);
+    friend std::shared_ptr<wte::EventBase> getReporterBase(
+        PeriodicReporterImpl *);
 };
 
 PeriodicReporter::PeriodicReporter() : impl_(new PeriodicReporterImpl(this)) { }
@@ -118,7 +118,8 @@ void PeriodicReporter::Deleter::operator()(PeriodicReporter *reporter) {
     delete reporter;
 }
 
-wte::EventBase* getReporterBase(PeriodicReporterImpl *reporter) {
+std::shared_ptr<wte::EventBase> getReporterBase(
+        PeriodicReporterImpl *reporter) {
     return reporter->base_;
 }
 

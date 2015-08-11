@@ -58,6 +58,10 @@ IF(WIN32)
     set_target_properties(ccmetrics_s PROPERTIES STATIC_LIBRARY_FLAGS ${wte_STATIC_PATH})
 ENDIF (WIN32)
 
+if(WIN32)
+   set(EXTRA_LIBS ws2_32)
+endif(WIN32)
+
 # Link dependencies
 target_link_libraries(${ccmetrics_SHARED_LIBRARY}
     format

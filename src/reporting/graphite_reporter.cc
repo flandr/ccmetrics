@@ -124,7 +124,7 @@ void GraphiteReporter::connect() {
     assert(state_ == State::DISCONNECTED);
 
     state_ = State::CONNECTING;
-    wte::EventBase *base = getReporterBase(impl_);
+    auto base = getReporterBase(impl_);
     stream_ = wte::Stream::create(base);
     stream_->connect(host_ip_, port_, &ccb_);
 }
@@ -182,20 +182,21 @@ void GraphiteReporter::report() NOEXCEPT {
         ;
     }
 
-    wte::Buffer writebuf;
+    auto writebuf = wte::Buffer::create();
     int64_t unix_timestamp = std::chrono::seconds(std::time(NULL)).count();
 
     auto counters = registry_->counters();
     for (auto& entry : counters) {
-        writeCounter(&writebuf, entry.first, entry.second, unix_timestamp);
+        writeCounter(writebuf.get(), entry.first, entry.second, unix_timestamp);
     }
 
     auto timers = registry_->timers();
     for (auto& entry : timers) {
-        writeTimer(&writebuf, entry.first, entry.second,  unix_timestamp);
+        writeTimer(writebuf.get(), entry.first, entry.second,  unix_timestamp);
     }
 
-    stream_->write(&writebuf, &wcb_);
+    // XXX ew. Fix this in wte.
+    stream_->write(writebuf.get(), &wcb_);
 }
 
 std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
