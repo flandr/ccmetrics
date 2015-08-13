@@ -20,7 +20,6 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 # Add third-party dependencies
 include(ExternalProject)
-include(External_gtest)
 include(External_rapidjson)
 
 # Use C++11 when building C++ code
@@ -35,5 +34,11 @@ ENDIF(APPLE)
 
 # Recurse
 add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(example)
+
+option(BUILD_TESTS "Build unit tests" ON)
+
+if (BUILD_TESTS)
+    include(External_gtest)
+    add_subdirectory(test)
+    add_subdirectory(example)
+endif()
