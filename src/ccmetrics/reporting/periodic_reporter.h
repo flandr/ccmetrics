@@ -61,7 +61,7 @@ private:
 
 /** @return a new periodic reporter that sends reports to stdout. */
 CCMETRICS_SYM std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
-mkConsoleReporter(MetricRegistry *registry);
+mkConsoleReporter(const MetricRegistry *registry);
 
 } // ccmetrics namespace
 

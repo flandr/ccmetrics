@@ -35,7 +35,8 @@ namespace ccmetrics {
 
 class CCMETRICS_SYM ConsoleReporter : public PeriodicReporter {
 public:
-    explicit ConsoleReporter(MetricRegistry *registry) : registry_(registry) { }
+    explicit ConsoleReporter(const MetricRegistry *registry)
+        : registry_(registry) { }
     void report() NOEXCEPT;
 
     static const int kKeyWidth = 20;
@@ -44,7 +45,7 @@ private:
     void printCounter(Counter *ctr);
     void printTimer(Timer *timer);
 
-    MetricRegistry *registry_;
+    const MetricRegistry *registry_;
 };
 
 template<typename T>
@@ -136,7 +137,7 @@ void ConsoleReporter::printWithBanner(std::string const& str, char sym) {
 }
 
 std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
-mkConsoleReporter(MetricRegistry *registry) {
+mkConsoleReporter(const MetricRegistry *registry) {
     return std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>(
         new ConsoleReporter(registry), PeriodicReporter::Deleter());
 }
