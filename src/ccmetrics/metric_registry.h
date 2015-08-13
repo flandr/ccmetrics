@@ -80,7 +80,14 @@ private:
     STATIC_DEFINE_ONCE(ccmetrics::Counter*, ANON_VAR(counter),  \
         registry.counter(name));                                \
     ANON_VAR(counter)->inc();                                   \
-    }  while (0)
+    } while (0)
+
+#define UPDATE_COUNTER(name, registry, delta)                   \
+    do {                                                        \
+    STATIC_DEFINE_ONCE(ccmetrics::Counter*, ANON_VAR(counter),  \
+        registry.counter(name));                                \
+    ANON_VAR(counter)->update(delta);                           \
+    } while (0)
 
 /**
  * Record the duration of execution whtin a scope.
@@ -89,6 +96,14 @@ private:
     STATIC_DEFINE_ONCE(ccmetrics::Timer*, ANON_VAR(timer),      \
         registry.timer(name));                                  \
     ccmetrics::ScopedTimer ANON_VAR(scoped_timer)(ANON_VAR(timer))
+
+/** Update a timer with a delta (in microseconds). */
+#define UPDATE_TIMER(name, registry, delta)                     \
+    do {                                                        \
+    STATIC_DEFINE_ONCE(ccmetrics::Timer*, ANON_VAR(timer),      \
+        registry.timer(name));                                  \
+    ANON_VAR(timer)->update(delta);                             \
+    } while (0)
 
 } // ccmetrics namespace
 
