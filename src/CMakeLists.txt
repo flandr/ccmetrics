@@ -45,21 +45,9 @@ add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
 add_dependencies(${ccmetrics_SHARED_LIBRARY} rapidjson_ext)
 
 IF(WIN32)
-add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
-add_dependencies(ccmetrics_s rapidjson_ext)
+    add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
+    add_dependencies(ccmetrics_s rapidjson_ext)
 ENDIF (WIN32)
-
-# Apple frameworks
-#IF(APPLE)
-#INCLUDE_DIRECTORIES ( /Developer/Headers/FlatCarbon )
-#FIND_LIBRARY(CARBON_LIBRARY Carbon)
-#FIND_LIBRARY(APP_SERVICES_LIBRARY ApplicationServices )
-#MARK_AS_ADVANCED (CARBON_LIBRARY
-#APP_SERVICES_LIBRARY)
-#SET(EXTRA_LIBS
-#${CARBON_LIBRARY}
-#${APP_SERVICES_LIBRARY})
-#ENDIF (APPLE)
 
 # Link dependencies
 target_link_libraries(${ccmetrics_SHARED_LIBRARY}
@@ -68,9 +56,9 @@ ${EXTRA_LIBS}
 
 # Installation
 install(TARGETS
-${ccmetrics_SHARED_LIBRARY}
-DESTINATION lib
-EXPORT ccmetrics-targets)
+    ${ccmetrics_SHARED_LIBRARY}
+    DESTINATION lib
+    EXPORT ccmetrics-targets)
 install(EXPORT ccmetrics-targets DESTINATION lib)
 
 install(DIRECTORY
