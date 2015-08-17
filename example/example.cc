@@ -60,6 +60,13 @@ void slow(int iters) {
 }
 
 int main(int argc, char **argv) {
+#if defined(_WIN32)
+    // Initialize WSA
+    WORD version = MAKEWORD(2, 2);
+    WSADATA data;
+    WSAStartup(version, &data);
+#endif
+
     int iters = 1000;
     if (argc == 2) {
         iters = atoi(argv[1]);

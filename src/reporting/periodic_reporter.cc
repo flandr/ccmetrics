@@ -20,57 +20,84 @@
 
 #include "ccmetrics/reporting/periodic_reporter.h"
 
+#include <cassert>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <thread>
+
+#include "wte/event_base.h"
+#include "wte/porting.h"
+#include "wte/timeout.h"
+#include "reporting/util.h"
 
 namespace ccmetrics {
 
 class PeriodicReporterImpl {
 public:
     PeriodicReporterImpl(PeriodicReporter *reporter)
-        : reporter_(reporter), running_(false), stop_(false) { }
+        : reporter_(reporter), base_(wte::mkEventBase()), timeout_(this),
+          running_(false) { }
+    ~PeriodicReporterImpl() { }
+
+    class ReporterTimeout final : public wte::Timeout {
+    public:
+        explicit ReporterTimeout(PeriodicReporterImpl *reporterImpl)
+            : reporterImpl_(reporterImpl) { }
+
+        void expired() NOEXCEPT {
+            // Re-register beofre reporting to maintain consistent period
+            reporterImpl_->base_->registerTimeout(this, &tv_);
+
+            // Report
+            reporterImpl_->reporter_->report();
+        }
+
+        void setTimeoutAndSchedule(std::chrono::milliseconds const& ms) {
+            tv_.tv_sec = ms.count() / 1000;
+            tv_.tv_usec = (ms.count() % 1000) * 1000;
+            reporterImpl_->base_->registerTimeout(this, &tv_);
+        }
+    private:
+        PeriodicReporterImpl *reporterImpl_ = nullptr;
+        struct timeval tv_;
+    };
 
     bool running() {
         return running_;
     }
 
     void stop() {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (!running_) {
-            return;
+        base_->runOnEventLoopAndWait([this]() -> void {
+                base_->unregisterTimeout(&timeout_);
+            });
+        running_ = false;
+        if (loop_.joinable()) {
+            loop_.join();
         }
-        stop_ = true;
-        cv_.notify_all();
-        cv_.wait(lock, [this]() { return !running_; });
-        worker_.join();
     }
 
     void start(std::chrono::milliseconds const& period) {
-        stop_ = false;
+        assert(!running_);
         running_ = true;
-        worker_ = std::thread([this, period]() -> void {
-                for (;;) {
-                    reporter_->report();
-
-                    std::unique_lock<std::mutex> lock(mutex_);
-                    cv_.wait_for(lock, period, [this]() { return stop_; });
-                    if (stop_) {
-                        running_ = false;
-                        cv_.notify_all();
-                        break;
-                    }
-                }
+        timeout_.setTimeoutAndSchedule(period);
+        // Start the event loop
+        loop_ = std::thread([this]() -> void {
+                base_->loop(wte::EventBase::LoopMode::UNTIL_EMPTY);
             });
+        // Wait for the loop to come up
+        base_->runOnEventLoopAndWait([]() -> void { }, /*defer=*/ true);
     }
 private:
     PeriodicReporter *reporter_;
-    std::thread worker_;
+    std::shared_ptr<wte::EventBase> base_;
+    ReporterTimeout timeout_;
 
-    std::mutex mutex_;
-    std::condition_variable cv_;
     bool running_;
-    bool stop_;
+    std::thread loop_;
+
+    friend std::shared_ptr<wte::EventBase> getReporterBase(
+        PeriodicReporterImpl *);
 };
 
 PeriodicReporter::PeriodicReporter() : impl_(new PeriodicReporterImpl(this)) { }
@@ -89,6 +116,11 @@ void PeriodicReporter::stop() {
 
 void PeriodicReporter::Deleter::operator()(PeriodicReporter *reporter) {
     delete reporter;
+}
+
+std::shared_ptr<wte::EventBase> getReporterBase(
+        PeriodicReporterImpl *reporter) {
+    return reporter->base_;
 }
 
 } // ccmetrics namespace

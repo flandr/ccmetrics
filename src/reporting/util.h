@@ -18,24 +18,13 @@
  * SOFTWARE.
  */
 
-#include <gtest/gtest.h>
+#include "wte/event_base.h"
 
-#if !defined(_WIN32)
-#include <signal.h>
-#else
-#include <winsock2.h>
-#endif
+namespace ccmetrics {
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
+class PeriodicReporterImpl;
 
-#if !defined(_WIN32)
-    signal(SIGPIPE, SIG_IGN);
-#else
-    WORD version = MAKEWORD(2, 2);
-    WSADATA data;
-    WSAStartup(version, &data);
-#endif
+/** @return the internal implementation's event base. */
+std::shared_ptr<wte::EventBase> getReporterBase(PeriodicReporterImpl *reporter);
 
-    return RUN_ALL_TESTS();
-}
+} // ccmetrics namespace

@@ -1,7 +1,7 @@
 project(ccmetrics C CXX)
 
 # Required CMake version
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.11)
 
 # Module search path
 set(CMAKE_MODULE_PATH
@@ -20,7 +20,9 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 # Add third-party dependencies
 include(ExternalProject)
+include(External_cppformat)
 include(External_rapidjson)
+include(External_wte)
 
 # Use C++11 when building C++ code
 if (NOT WIN32)

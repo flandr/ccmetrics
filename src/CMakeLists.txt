@@ -24,6 +24,7 @@ set(libccmetrics_SRCS
     metrics/striped_int64.cc
     metrics/timer.cc
     reporting/console_reporter.cc
+    reporting/graphite_reporter.cc
     reporting/periodic_reporter.cc
     serializing/json_serializer.cc
     snapshot.cc
@@ -44,14 +45,28 @@ add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
 # Depend on rapidjson headers
 add_dependencies(${ccmetrics_SHARED_LIBRARY} rapidjson_ext)
 
+# Seems like we shouldn't have to do this explicitly :/
+add_dependencies(${ccmetrics_SHARED_LIBRARY} cppformat_ext)
+add_dependencies(${ccmetrics_SHARED_LIBRARY} wte_ext)
+
 IF(WIN32)
     add_library(ccmetrics_s STATIC ${libccmetrics_SRCS})
     add_dependencies(ccmetrics_s rapidjson_ext)
+    add_dependencies(ccmetrics_s cppformat_ext)
+    add_dependencies(ccmetrics_s wte_ext)
+    # We can combine the static libraries by passing them to the linker
+    set_target_properties(ccmetrics_s PROPERTIES STATIC_LIBRARY_FLAGS ${wte_STATIC_PATH})
 ENDIF (WIN32)
+
+if(WIN32)
+   set(EXTRA_LIBS ws2_32)
+endif(WIN32)
 
 # Link dependencies
 target_link_libraries(${ccmetrics_SHARED_LIBRARY}
-${EXTRA_LIBS}
+    format
+    wte
+    ${EXTRA_LIBS}
 )
 
 # Installation

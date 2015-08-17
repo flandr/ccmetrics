@@ -34,7 +34,7 @@ target_link_libraries(test
 )
 
 IF(WIN32)
-    target_link_libraries(test ccmetrics_s)
+    target_link_libraries(test ccmetrics_s ${LibEvent_LIBRARY} ws2_32)
 ELSE(WIN32)
     target_link_libraries(test ccmetrics)
 ENDIF(WIN32)
