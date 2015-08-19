@@ -151,7 +151,7 @@ void ConsoleReporter::printWithBanner(std::string const& str, char sym) {
     assert(str.size() < kConsoleWidth);
 
     printf("%s %s\n", str.c_str(),
-        std::string(kConsoleWidth - str.size(), sym).c_str());
+        std::string(kConsoleWidth - str.size() - 1, sym).c_str());
 }
 
 std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>
