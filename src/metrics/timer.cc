@@ -21,7 +21,7 @@
 #include "ccmetrics/snapshot.h"
 #include "ccmetrics/timer.h"
 #include "metrics/histogram.h"
-#include "metrics/meter.h"
+#include "metrics/meter_impl.h"
 
 namespace ccmetrics {
 
@@ -50,7 +50,7 @@ public:
     }
 private:
     Histogram histogram_;
-    Meter meter_;
+    MeterImpl meter_;
 };
 
 void TimerImpl::update(int64_t duration) {

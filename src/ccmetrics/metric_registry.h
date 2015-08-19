@@ -26,6 +26,7 @@
 
 #include "ccmetrics/counter.h"
 #include "ccmetrics/porting.h"
+#include "ccmetrics/meter.h"
 #include "ccmetrics/timer.h"
 
 namespace ccmetrics {
@@ -56,10 +57,17 @@ public:
     /** @return a new or existing timer. */
     Timer* timer(std::string const& name);
 
+    /** @return a new or existing meter. */
+    Meter* meter(std::string const& name);
+
     /** @return all registered counter metrics. */
     std::map<std::string, Counter*> counters() const;
 
+    /** @return all registered timer metrics. */
     std::map<std::string, Timer*> timers() const;
+
+    /** @return all registered meters. */
+    std::map<std::string, Meter*> meters() const;
 private:
     MetricRegistry(MetricRegistry const&) = delete;
     MetricRegistry& operator=(MetricRegistry const&) = delete;
@@ -90,7 +98,7 @@ private:
     } while (0)
 
 /**
- * Record the duration of execution whtin a scope.
+ * Record the duration of execution within a scope.
  */
 #define SCOPED_TIMER(name, registry)                            \
     STATIC_DEFINE_ONCE(ccmetrics::Timer*, ANON_VAR(timer),      \
@@ -103,6 +111,14 @@ private:
     STATIC_DEFINE_ONCE(ccmetrics::Timer*, ANON_VAR(timer),      \
         registry.timer(name));                                  \
     ANON_VAR(timer)->update(delta);                             \
+    } while (0)
+
+/** Update a meter with `value` events. */
+#define UPDATE_METER(name, registry, value)                     \
+    do {                                                        \
+    STATIC_DEFINE_ONCE(ccmetrics::Meter*, ANON_VAR(meter),      \
+        registry.meter(name));                                  \
+    ANON_VAR(meter)->mark(value);                               \
     } while (0)
 
 } // ccmetrics namespace

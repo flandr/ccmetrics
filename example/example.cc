@@ -55,6 +55,7 @@ void slow(int iters) {
     SCOPED_TIMER("slow", registry());
     for (int i = 0; i < iters; ++i) {
         SCOPED_TIMER("fast", registry());
+        UPDATE_METER("metered.event", registry(), 1000);
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }

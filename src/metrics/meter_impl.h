@@ -71,12 +71,15 @@ private:
  * Meter that tracks exponentially weighted moving average for one, five, and
  * fifteen minute rates. Thus, basicallly UNIX load average.
  */
-class Meter {
+class MeterImpl {
 public:
-    Meter();
+    MeterImpl();
 
     /** Mark that an event occurred. */
     void mark();
+
+    /** Mark that `n` events occurred. */
+    void mark(int n);
 
     /** @return one minute rate. */
     double oneMinuteRate();

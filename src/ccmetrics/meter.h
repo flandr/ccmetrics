@@ -18,35 +18,41 @@
  * SOFTWARE.
  */
 
-#include <gtest/gtest.h>
+#ifndef SRC_CCMETRICS_METER_H_
+#define SRC_CCMETRICS_METER_H_
 
-#include "metrics/meter_impl.h"
+#include "ccmetrics/porting.h"
 
 namespace ccmetrics {
-namespace test {
 
-class RateEWMATest : public ::testing::Test {
+class MeterImpl;
+
+/** A meter that provides rate estimates. */
+class CCMETRICS_SYM Meter {
 public:
-    void tick(RateEWMA &rate) {
-        rate.tick();
-    }
+    Meter();
+    ~Meter();
+
+    /** Record an event. */
+    void mark();
+
+    /** Record `n` events. */
+    void mark(int n);
+
+    /** @return the one minute rate. */
+    double oneMinuteRate();
+
+    /** @return the five minute rate. */
+    double fiveMinuteRate();
+
+    /** @return the fifteen minute rate. */
+    double fifteenMinuteRate();
+private:
+    Meter(Meter const&) = delete;
+    Meter& operator=(Meter const&) = delete;
+    MeterImpl *impl_;
 };
 
-// Brittle under debuggers or valgrind, fyi. Could use a mock clock.
-TEST_F(RateEWMATest, BasicFunctionality) {
-    RateEWMA rate(MeterImpl::kOneMinuteAlpha);
-    rate.update(1);
-    tick(rate); // Force tick to 5s
-    ASSERT_EQ(1.0 / static_cast<double>(RateEWMA::kInterval), rate.rate());
-
-    rate.update(1);
-    tick(rate); // Force tick to 10s
-    ASSERT_EQ(1.0 / static_cast<double>(RateEWMA::kInterval), rate.rate());
-
-    rate.update(0);
-    tick(rate); // Force tick to 15s
-    ASSERT_LT(rate.rate(), 1.0 / static_cast<double>(RateEWMA::kInterval));
-}
-
-} // test namespace
 } // ccmetrics namespace
+
+#endif // SRC_CCMETRICS_METER_H_

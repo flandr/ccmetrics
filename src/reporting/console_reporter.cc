@@ -44,6 +44,7 @@ private:
     void printWithBanner(std::string const& str, char sym);
     void printCounter(Counter *ctr);
     void printTimer(Timer *timer);
+    void printMeter(Meter *meter);
 
     const MetricRegistry *registry_;
 };
@@ -103,6 +104,17 @@ void ConsoleReporter::report() NOEXCEPT {
         }
         printf("\n");
     }
+
+    auto meters = registry_->meters();
+    if (!meters.empty()) {
+        printWithBanner("-- Meters", '-');
+        for (auto& entry : meters) {
+            printf("%s\n", entry.first.c_str());
+            printMeter(entry.second);
+        }
+        printf("\n");
+
+    }
 }
 
 void ConsoleReporter::printCounter(Counter *counter) {
@@ -127,13 +139,19 @@ void ConsoleReporter::printTimer(Timer *timer) {
     printFormatted("99.9%", "<=", snap.get999tile(), "us");
 }
 
+void ConsoleReporter::printMeter(Meter *meter) {
+    printFormatted("1-minute rate", "=", meter->oneMinuteRate(), "/s");
+    printFormatted("5-minute rate", "=", meter->fiveMinuteRate(), "/s");
+    printFormatted("15-minute rate", "=", meter->fifteenMinuteRate(), "/s");
+}
+
 void ConsoleReporter::printWithBanner(std::string const& str, char sym) {
     const int kConsoleWidth = 80; // Narrow console bigot :)
 
     assert(str.size() < kConsoleWidth);
 
     printf("%s %s\n", str.c_str(),
-        std::string(kConsoleWidth - str.size(), sym).c_str());
+        std::string(kConsoleWidth - str.size() - 1, sym).c_str());
 }
 
 std::unique_ptr<PeriodicReporter, PeriodicReporter::Deleter>

@@ -71,6 +71,8 @@ private:
         Counter *counter, int64_t timestamp);
     void writeTimer(wte::Buffer *buffer, std::string const& name,
         Timer *timer, int64_t timestamp);
+    void writeMeter(wte::Buffer *buffer, std::string const& name,
+        Meter *meter, int64_t timestamp);
 
     std::string prefix(std::string const& name, std::string const& val) {
         return name + "." + val;
@@ -170,6 +172,18 @@ void GraphiteReporter::writeTimer(wte::Buffer *buffer,
         prefix(name, "p999"), snap.get999tile(), ts));
 }
 
+void GraphiteReporter::writeMeter(wte::Buffer *buffer,
+        std::string const& name, Meter *meter, int64_t ts) {
+    std::string f;
+
+    buffer->append(fmt::format("{} {:2.2f} {}\n",
+        prefix(name, "m1_rate"), meter->oneMinuteRate(), ts));
+    buffer->append(fmt::format("{} {:2.2f} {}\n",
+        prefix(name, "m5_rate"), meter->fiveMinuteRate(), ts));
+    buffer->append(fmt::format("{} {:2.2f} {} \n",
+        prefix(name, "m15_rate"), meter->fifteenMinuteRate(), ts));
+}
+
 void GraphiteReporter::report() NOEXCEPT {
     switch (state_) {
     case State::DISCONNECTED:
@@ -193,6 +207,11 @@ void GraphiteReporter::report() NOEXCEPT {
     auto timers = registry_->timers();
     for (auto& entry : timers) {
         writeTimer(writebuf.get(), entry.first, entry.second,  unix_timestamp);
+    }
+
+    auto meters = registry_->meters();
+    for (auto& entry : meters) {
+        writeMeter(writebuf.get(), entry.first, entry.second,  unix_timestamp);
     }
 
     // XXX ew. Fix this in wte.

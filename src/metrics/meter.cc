@@ -18,93 +18,32 @@
  * SOFTWARE.
  */
 
-#include "metrics/meter.h"
-
-#include <atomic>
-#include <cmath>
+#include "ccmetrics/meter.h"
+#include "metrics/meter_impl.h"
 
 namespace ccmetrics {
 
-double RateEWMA::rate() {
-    tickIfNecessary();
-    return rate_;
-}
-
-void RateEWMA::update(int64_t val) {
-    buffer_.add(val);
-    tickIfNecessary();
-}
-
-void RateEWMA::tickIfNecessary() {
-    auto now = std::chrono::steady_clock::now();
-    auto prev = last_tick_.load();
-    auto delta_us = std::chrono::duration_cast<std::chrono::microseconds>(
-        now - prev.t);
-
-    if (delta_us.count() < kInterval * 1E6) {
-        return;
-    }
-
-    if (!last_tick_.compare_exchange_strong(prev, CWG1778Hack(now))) {
-        return;
-    }
-
-    int iters = delta_us.count() / (kInterval * 1E6L);
-    for (int i = 0; i < iters; ++i) {
-        // TODO: this could be done more efficiently (wrt atomic CAS) within
-        // the tick method itself. Consider inlining.
-        tick();
-    }
-}
-
-void RateEWMA::tick() {
-    int64_t uncounted = buffer_.value();
-    buffer_.reset(); // XXX you just lost some events. Do you care?
-
-    double instant = uncounted / static_cast<double>(kInterval);
-
-    if (init_) {
-        double rate = rate_.load();
-        while (!rate_.compare_exchange_weak(
-                rate, rate + alpha_ * (instant - rate))) { }
-    } else {
-        rate_ = instant;
-        init_ = true;
-    }
-}
-
-Meter::Meter()
-    : oneMinuteRate_(kOneMinuteAlpha),
-      fiveMinuteRate_(kFiveMinuteAlpha),
-      fifteenMinuteRate_(kFifteenMinuteAlpha) {
-}
-
-const double Meter::kOneMinuteAlpha =
-    1 - std::exp(-RateEWMA::kInterval / 60.0);
-const double Meter::kFiveMinuteAlpha =
-    1 - std::exp(-RateEWMA::kInterval / 60.0 / 5.0);
-const double Meter::kFifteenMinuteAlpha =
-    1 - std::exp(-RateEWMA::kInterval / 60.0 / 15.0);
+Meter::Meter() : impl_(new MeterImpl()) { }
+Meter::~Meter() { delete impl_; }
 
 void Meter::mark() {
-    // TODO: moving the "tick if necessary" into the meter yields 1/3 the CAS
-    // instructions required by keeping it encapsulated in the rate class.
-    // Probably worthwhile.
-    oneMinuteRate_.update(1);
-    fiveMinuteRate_.update(1);
-    fifteenMinuteRate_.update(1);
+    impl_->mark();
+}
+
+void Meter::mark(int n) {
+    impl_->mark(n);
 }
 
 double Meter::oneMinuteRate() {
-    return oneMinuteRate_.rate();
+    return impl_->oneMinuteRate();
 }
 
 double Meter::fiveMinuteRate() {
-    return fiveMinuteRate_.rate();
+    return impl_->fiveMinuteRate();
 }
 
 double Meter::fifteenMinuteRate() {
-    return fifteenMinuteRate_.rate();
+    return impl_->fifteenMinuteRate();
 }
 
 } // ccmetrics namespace
