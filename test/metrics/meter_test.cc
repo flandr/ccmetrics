@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 
-#include "metrics/meter.h"
+#include "metrics/meter_impl.h"
 
 namespace ccmetrics {
 namespace test {
@@ -34,7 +34,7 @@ public:
 
 // Brittle under debuggers or valgrind, fyi. Could use a mock clock.
 TEST_F(RateEWMATest, BasicFunctionality) {
-    RateEWMA rate(Meter::kOneMinuteAlpha);
+    RateEWMA rate(MeterImpl::kOneMinuteAlpha);
     rate.update(1);
     tick(rate); // Force tick to 5s
     ASSERT_EQ(1.0 / static_cast<double>(RateEWMA::kInterval), rate.rate());

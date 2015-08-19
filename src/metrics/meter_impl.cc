@@ -18,7 +18,7 @@
  * SOFTWARE.
  */
 
-#include "metrics/meter.h"
+#include "metrics/meter_impl.h"
 
 #include <atomic>
 #include <cmath>
@@ -73,20 +73,20 @@ void RateEWMA::tick() {
     }
 }
 
-Meter::Meter()
+MeterImpl::MeterImpl()
     : oneMinuteRate_(kOneMinuteAlpha),
       fiveMinuteRate_(kFiveMinuteAlpha),
       fifteenMinuteRate_(kFifteenMinuteAlpha) {
 }
 
-const double Meter::kOneMinuteAlpha =
+const double MeterImpl::kOneMinuteAlpha =
     1 - std::exp(-RateEWMA::kInterval / 60.0);
-const double Meter::kFiveMinuteAlpha =
+const double MeterImpl::kFiveMinuteAlpha =
     1 - std::exp(-RateEWMA::kInterval / 60.0 / 5.0);
-const double Meter::kFifteenMinuteAlpha =
+const double MeterImpl::kFifteenMinuteAlpha =
     1 - std::exp(-RateEWMA::kInterval / 60.0 / 15.0);
 
-void Meter::mark(int n) {
+void MeterImpl::mark(int n) {
     // TODO: moving the "tick if necessary" into the meter yields 1/3 the CAS
     // instructions required by keeping it encapsulated in the rate class.
     // Probably worthwhile.
@@ -95,19 +95,19 @@ void Meter::mark(int n) {
     fifteenMinuteRate_.update(n);
 }
 
-void Meter::mark() {
+void MeterImpl::mark() {
     mark(1);
 }
 
-double Meter::oneMinuteRate() {
+double MeterImpl::oneMinuteRate() {
     return oneMinuteRate_.rate();
 }
 
-double Meter::fiveMinuteRate() {
+double MeterImpl::fiveMinuteRate() {
     return fiveMinuteRate_.rate();
 }
 
-double Meter::fifteenMinuteRate() {
+double MeterImpl::fifteenMinuteRate() {
     return fifteenMinuteRate_.rate();
 }
 
