@@ -75,6 +75,9 @@ int main(int argc, char **argv) {
     bar(iters);
     slow(iters);
 
+    UPDATE_METER("metered_events", registry(), 1);
+    UPDATE_METER("metered_events", registry(), 1000);
+
     auto reporter = ccmetrics::mkConsoleReporter(&registry());
     reporter->report();
     return 0;
