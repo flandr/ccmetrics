@@ -86,13 +86,17 @@ const double Meter::kFiveMinuteAlpha =
 const double Meter::kFifteenMinuteAlpha =
     1 - std::exp(-RateEWMA::kInterval / 60.0 / 15.0);
 
-void Meter::mark() {
+void Meter::mark(int n) {
     // TODO: moving the "tick if necessary" into the meter yields 1/3 the CAS
     // instructions required by keeping it encapsulated in the rate class.
     // Probably worthwhile.
-    oneMinuteRate_.update(1);
-    fiveMinuteRate_.update(1);
-    fifteenMinuteRate_.update(1);
+    oneMinuteRate_.update(n);
+    fiveMinuteRate_.update(n);
+    fifteenMinuteRate_.update(n);
+}
+
+void Meter::mark() {
+    mark(1);
 }
 
 double Meter::oneMinuteRate() {

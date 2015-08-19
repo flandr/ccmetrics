@@ -78,6 +78,9 @@ public:
     /** Mark that an event occurred. */
     void mark();
 
+    /** Mark that `n` events occurred. */
+    void mark(int n);
+
     /** @return one minute rate. */
     double oneMinuteRate();
 
