@@ -20,6 +20,7 @@ set(libccmetrics_SRCS
     metrics/counter.cc
     metrics/exponential_reservoir.cc
     metrics/histogram.cc
+    metrics/meter.cc
     metrics/meter_impl.cc
     metrics/striped_int64.cc
     metrics/timer.cc
