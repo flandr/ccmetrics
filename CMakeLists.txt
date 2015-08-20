@@ -3,6 +3,12 @@ project(ccmetrics C CXX)
 # Required CMake version
 cmake_minimum_required(VERSION 2.8.11)
 
+set (ccmetrics_MAJOR_VERSION 0)
+set (ccmetrics_MINOR_VERSION 1)
+set (ccmetrics_PATCH_VERSION 0)
+set (ccmetrics_VERSION
+    ${ccmetrics_MAJOR_VERSION}.${ccmetrics_MINOR_VERSION}.${ccmetrics_PATCH_VERSION})
+
 # Module search path
 set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake
@@ -44,3 +50,17 @@ if (BUILD_TESTS)
     add_subdirectory(test)
     add_subdirectory(example)
 endif()
+
+# Packaging
+set (CPACK_PACKAGE_NAME libccmetrics-dev)
+set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Fine-grained metrics for C++ applications")
+set (CPACK_PACKAGE_VERSION_MAJOR ${ccmetrics_MAJOR_VERSION})
+set (CPACK_PACKAGE_VERSION_MINOR ${ccmetrics_MINOR_VERSION})
+set (CPACK_PACKAGE_VERSION_PATCH ${ccmetrics_PATCH_VERSION})
+set (CPACK_PACKAGE_VERSION ${ccmetrics_VERSION})
+
+set (CPACK_GENERATOR "DEB")
+set (CPACK_DEBIAN_PACKAGE_MAINTAINER "Nate Rosenblum <flander@gmail.com>")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "libwte-dev")
+
+include (CPack)

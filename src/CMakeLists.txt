@@ -42,6 +42,10 @@ add_definitions("-DEXPORTING")
 
 # Main library targets
 add_library(${ccmetrics_SHARED_LIBRARY} SHARED ${libccmetrics_SRCS})
+set_target_properties(${ccmetrics_SHARED_LIBRARY} PROPERTIES VERSION
+    ${ccmetrics_VERSION})
+set_target_properties(${ccmetrics_SHARED_LIBRARY} PROPERTIES SOVERSION
+    ${ccmetrics_MAJOR_VERSION})
 
 # Depend on rapidjson headers
 add_dependencies(${ccmetrics_SHARED_LIBRARY} rapidjson_ext)
