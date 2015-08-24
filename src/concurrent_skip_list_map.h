@@ -564,9 +564,10 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
                 // thing or abort. XXX
                 goto exit;
             }
+
+            --overage;
         }
 
-        --overage;
 
         if (n->dead()) {
             // We were concurrently erased; just give up and get out.
@@ -574,6 +575,7 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
         }
     }
 exit:
+    assert(overage >= 0);
 
     if (overage > 0) {
         // We've overcounted the number of linked levels due to one or more
