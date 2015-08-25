@@ -159,24 +159,42 @@ template<typename Key, typename Value>
 typename ConcurrentSkipListMap<Key, Value>::SMR
 ConcurrentSkipListMap<Key, Value>::smr_;
 
+template<typename T>
+T* mark(T *ptr) {
+    return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) | 0x1);
+}
+
 template<typename Key, typename Value>
 typename ConcurrentSkipListMap<Key, Value>::Node*
 ConcurrentSkipListMap<Key, Value>::mkNode(
         int height, Key const& key, Value const& value) {
     Node* ret = new Node{key, value, (uint8_t) height, {0}, nullptr};
     ret->next_ = new std::atomic<Node*>[height];
-    memset(ret->next_, 0, height * sizeof(*ret->next_));
+    ret->next_[0] = nullptr;
+    for (int i = 1; i < height; ++i) {
+        // Marked null ptrs are a special value used in insert
+        ret->next_[i] = mark(static_cast<Node*>(nullptr));
+    }
     return ret;
 }
 
 template<typename T>
-T* mark(T *ptr) {
-    return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) | 0x1);
+bool markedi(T *ptr) {
+    // Levels above 0 treat 0x1 differently; see insert for discussion.
+    // We only consider a null value marked if at level 0, and call marked0
+    // in this case.
+    return 0 != (reinterpret_cast<uintptr_t>(ptr) & 0x1) &&
+        0x1 != reinterpret_cast<uintptr_t>(ptr);
 }
 
 template<typename T>
-bool marked(T *ptr) {
+bool marked0(T *ptr) {
     return 0 != (reinterpret_cast<uintptr_t>(ptr) & 0x1);
+}
+
+template<typename T>
+bool marked(T *ptr, int level) {
+    return level == 0 ? marked0(ptr) : markedi(ptr);
 }
 
 template<typename T>
@@ -229,14 +247,15 @@ try_again:
         // At the top of the loop body, we hold hp2 == prev and hp1 == cur
 
         cur = hp.loadAndSetHazard(prev->next_[i], 1); // hp1
-        if (marked(cur)) {
+        if (marked(cur, i)) {
             // Inconsistent prev *and* you have no protection from the hazard
             // pointer. Shoot again.
             goto try_again;
         }
 
         for (;;) {
-            if (!cur) {
+            // Have to explicitly clear because this may be marked null on level 1+
+            if (!clear(cur)) {
                 break; // Break out to main index level traversal
             }
 
@@ -254,11 +273,11 @@ try_again:
             }
 
             // TODO: if we marked up from 0 we could just use cur->dead()
-            bool cur_dead = marked(next) || cur->dead();
+            bool cur_dead = marked(next, i) || cur->dead();
 
             if (!cur_dead) {
                 if (cur->key >= key) {
-                    // XXX on equality, short-circuit here?
+                    // TODO: on equality, short-circuit here?
                     break;
                 }
                 prev = cur;
@@ -388,7 +407,7 @@ Key ConcurrentSkipListMap<Key, Value>::firstKey() {
     Node* cur;
     do {
         cur = hp.loadAndSetHazard(head_->next_[0], 1); // hp1
-    } while (marked(cur));
+    } while (marked0(cur));
 
     Key ret = cur ? cur->key : Key();
     hp.clearHazard(1);
@@ -416,11 +435,11 @@ try_again:
         ret.push_back(f(cur));
 
         next = hp.loadAndSetHazard(cur->next_[0], 0); // hp0
-        while (marked(next)) {
+        while (marked0(next)) {
             // Current node is being deleted. Spin on reloading cur from prev
             // and give up if prev goes inconsistent as well.
             cur = hp.loadAndSetHazard(prev->next_[0], 1); // hp1
-            if (marked(cur)) {
+            if (marked0(cur)) {
                 goto try_again;
             } else if (cur) {
                 next = hp.loadAndSetHazard(cur->next_[0], 0); // hp0
@@ -532,22 +551,25 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
     int overage = n->height - 1; // See exit
     for (int i = std::max(level, height_); i > 0; --i) {
         Node *cur = hp.loadAndSetHazard(prev->next_[i], 1); // hp1
-        if (marked(cur)) {
+        // Note _explicit_ use of marked0, which detects a marked null pointer
+        // at level 1+. This prevents linkin into a node that is already in
+        // progress. See extensive comments in the README-skiplist.md in this
+        // section.
+        if (marked0(cur)) {
             goto exit;
         }
 
         while (cur && cur->key < key) {
             // Don't care about spurious failures due to insertion after `cur`.
             next = hp.loadAndSetHazard(cur->next_[i], 0);
-            if (marked(next)) {
+            if (markedi(next)) {
                 goto exit;
             }
 
             if (prev->next_[i] != cur) {
-                // XXX prev changed; you have to restart the search in
-                // this case. Should we actually retry, or just give up
-                // index insertion? It's ok to fail.
-                // XXX double check that it's ok to fail
+                // prev changed; you have to restart the search in
+                // this case. As with all failures, we just give up on
+                // index insertion.
                 goto exit;
             }
 
@@ -560,8 +582,8 @@ bool ConcurrentSkipListMap<Key, Value>::insert(Key const& key,
         if (i <= level) {
             n->next_[i].store(cur);
             if (!prev->next_[i].compare_exchange_strong(cur, n)) {
-                // XXX insertion after prev. Either retry the whole
-                // thing or abort. XXX
+                // There was either an insertion after prev on this level
+                // or prev was marked. Abort the insertion.
                 goto exit;
             }
 
